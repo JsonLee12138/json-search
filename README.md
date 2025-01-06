@@ -1,7 +1,11 @@
-# WXT + Vue 3
+## 当前功能尚未开发完善, 敬请期待
 
-This template should help get you started developing with Vue 3 in WXT.
+### 使用方法如下:
 
-## Recommended IDE Setup
+- 使用快捷键: `ctrl+shift+空格` (Mac: `command+shift+空格`)
+- 必须先选择搜索引擎, 输入`@`进行选择
+- 输入搜索关键词, 按`回车`即可搜索
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar).
+#### 关键字匹配示例:
+如果需要匹配关键字，可使用`#`前后用空格进行标记，例如:
+`其他关键字 #测试 其他关键字`

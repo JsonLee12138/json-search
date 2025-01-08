@@ -1,6 +1,11 @@
 <script lang="ts" setup>
 import Mention from './components/Mention/index.vue';
-import { ElForm, ElMention, type MentionOption } from 'element-plus';
+import { ElForm, ElInput, ElDialog, ElButton, ElFormItem } from 'element-plus';
+import 'element-plus/es/components/input/style/css';
+import 'element-plus/es/components/dialog/style/css';
+import 'element-plus/es/components/button/style/css';
+import 'element-plus/es/components/form/style/css';
+import 'element-plus/es/components/form-item/style/css';
 import { addSearchRules, addSearchPlatform, defaultSearchPlatforms } from './data';
 import type { MentionRef, SearchPlatformItem } from './type';
 import { MentionValue } from './components/Mention/type';
@@ -60,20 +65,24 @@ const handleBeforeClose = () => {
 }
 
 const handleAddSubmit = () => {
-  searchValue.value = '';
-  const item = {
-    url: formData.url,
-    label: formData.label,
-    value: formData.value,
-    sort: formData.sort,
-    isDefault: formData.isDefault,
-    icon: ''
-  }
-  searchPlatforms.value.push(item);
-  chrome.storage?.local.set({
-    searchPlatforms: [...searchPlatforms.value]
+  formRef.value?.validate((valid: boolean) => {
+    if (valid) {
+      searchValue.value = '';
+      const item = {
+        url: formData.url,
+        label: formData.label,
+        value: formData.value,
+        sort: formData.sort,
+        isDefault: formData.isDefault,
+        icon: ''
+      }
+      searchPlatforms.value.push(item);
+      chrome.storage?.local.set({
+        searchPlatforms: [...searchPlatforms.value]
+      })
+      dialogFormVisible.value = false;
+    }
   })
-  dialogFormVisible.value = false;
 }
 
 const handleSelect = (value: string) => {

@@ -16,14 +16,18 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "@floating-ui/vue": "^1.1.6",
     "@wxt-dev/unocss": "^1.0.0",
     "element-plus": "^2.9.2",
+    "lodash-es": "^4.17.21",
     "unocss": "^0.65.3",
     "vue": "^3.5.12"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.280",
+    "@types/lodash-es": "^4.17.12",
     "@wxt-dev/module-vue": "^1.0.1",
+    "sass-embedded": "^1.83.1",
     "typescript": "5.6.3",
     "vue-tsc": "^2.1.10",
     "wxt": "^0.19.13"

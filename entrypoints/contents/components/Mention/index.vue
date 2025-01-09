@@ -177,13 +177,8 @@ watch([() => showOptions.value, () => activeIndex.value], ([show, index]) => {
     currentFocusIndex = 0;
   }
 })
-
-onMounted(() => {
-  if (!props.modelValue?.prepend) {
-    emit('update:modelValue', { prepend: optionsUse.value[0].value });
-  }
-  window.addEventListener('keydown', e => {
-    switch (e.key) {
+const handleKeyDown = (e: KeyboardEvent) => {
+  switch (e.key) {
       case 'ArrowDown':
         if (showOptions.value) {
           e.preventDefault();
@@ -219,7 +214,19 @@ onMounted(() => {
         }
         break;
     }
+}
+onMounted(() => {
+  if (!props.modelValue?.prepend) {
+    emit('update:modelValue', { prepend: optionsUse.value[0].value });
+  }
+  window.addEventListener('keydown', handleKeyDown, {
+    capture: true
   })
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeyDown, {
+    capture: true
+  });
 })
 
 defineExpose<MentionRef>({

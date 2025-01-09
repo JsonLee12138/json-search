@@ -6,7 +6,3 @@ export type SearchPlatformItem = {
   isDefault?: boolean;
   icon?: string;
 }
-
-export type MentionRef = {
-  focus: () => void
-}

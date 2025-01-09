@@ -37,10 +37,8 @@
 
 <script lang="ts" setup generic="T = DefaultSelectOption">
 import { get } from 'lodash-es';
-import { type DefaultSelectOption, MentionValue, type SelectOptionUse } from './type';
+import { type DefaultSelectOption, MentionRef, MentionValue, type SelectOptionUse } from './type';
 import { ElInput } from 'element-plus';
-import { MentionRef } from '../../type';
-import 'element-plus/es/components/input/style/css';
 const props = withDefaults(defineProps<{
   options: T[]
   modelValue?: MentionValue,

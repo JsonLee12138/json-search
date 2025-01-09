@@ -1,4 +1,4 @@
-import type { SearchPlatformItem } from "./type";
+import type { SearchPlatformItem } from "../global/types/type";
 
 export const addSearchPlatform: SearchPlatformItem = {
   label: '新增',

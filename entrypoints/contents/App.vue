@@ -1,18 +1,13 @@
 <script lang="ts" setup>
 import Mention from './components/Mention/index.vue';
-import { ElForm, ElInput, ElDialog, ElButton, ElFormItem } from 'element-plus';
-import 'element-plus/es/components/input/style/css';
-import 'element-plus/es/components/dialog/style/css';
-import 'element-plus/es/components/button/style/css';
-import 'element-plus/es/components/form/style/css';
-import 'element-plus/es/components/form-item/style/css';
 import { addSearchRules, addSearchPlatform, defaultSearchPlatforms } from './data';
-import type { MentionRef, SearchPlatformItem } from './type';
-import { MentionValue } from './components/Mention/type';
+import type {  SearchPlatformItem } from '../global/types/type';
+import { MentionRef, MentionValue } from './components/Mention/type';
+import { FormInstance } from 'element-plus';
 const searchValue = ref('');
 const showSearch = ref(false);
 const dialogFormVisible = ref(false);
-const formRef = ref<typeof ElForm | null>(null);
+const formRef = ref<FormInstance | null>(null);
 const searchPlatforms = ref<SearchPlatformItem[]>(defaultSearchPlatforms);
 const searchPlatformOptions = computed<SearchPlatformItem[]>(() => {
   return [...searchPlatforms.value, addSearchPlatform];

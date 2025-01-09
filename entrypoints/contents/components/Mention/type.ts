@@ -17,3 +17,7 @@ export type SelectOptionUse<T = DefaultSelectOption> = T & {
   value: string;
   icon?: string;
 }
+
+export type MentionRef = {
+  focus: () => void
+}

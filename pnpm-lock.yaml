@@ -20,6 +20,9 @@ importers:
       element-plus:
         specifier: ^2.9.2
         version: 2.9.2(vue@3.5.13(typescript@5.6.3))
+      jsonlee-promise:
+        specifier: ^0.0.1
+        version: 0.0.1
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -45,6 +48,12 @@ importers:
       typescript:
         specifier: 5.6.3
         version: 5.6.3
+      unplugin-auto-import:
+        specifier: ^19.0.0
+        version: 19.0.0(@vueuse/core@9.13.0(vue@3.5.13(typescript@5.6.3)))(rollup@4.29.2)
+      unplugin-vue-components:
+        specifier: ^28.0.0
+        version: 28.0.0(@babel/parser@7.26.3)(rollup@4.29.2)(vue@3.5.13(typescript@5.6.3))
       vue-tsc:
         specifier: ^2.1.10
         version: 2.2.0(typescript@5.6.3)
@@ -1830,6 +1839,9 @@ packages:
   jsonfile@6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
 
+  jsonlee-promise@0.0.1:
+    resolution: {integrity: sha512-6vjdagM59s2eJGtyKb59QtyC44mDe+Xy/L5fsLT8GjN7/UVhdIrSDKUJAyK8M7tAioqA7USsA6bxrq2Ouc4esg==}
+
   jszip@3.10.1:
     resolution: {integrity: sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==}
 
@@ -2714,9 +2726,38 @@ packages:
       vite:
         optional: true
 
+  unplugin-auto-import@19.0.0:
+    resolution: {integrity: sha512-TREXtXqCM6YLy3rE2tjvKZEaCiPlP2e5bmnRKaS8AM2MlNgjV7UP4RPieWIfs4Isv0GoeHmov956PIIvJYdqpQ==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@nuxt/kit': ^3.2.2
+      '@vueuse/core': '*'
+    peerDependenciesMeta:
+      '@nuxt/kit':
+        optional: true
+      '@vueuse/core':
+        optional: true
+
+  unplugin-vue-components@28.0.0:
+    resolution: {integrity: sha512-vYe0wSyqTVhyNFIad1iiGyQGhG++tDOMgohqenMDOAooMJP9vvzCdXTqCVx20A0rCQXFNjgoRbSeDAioLPH36Q==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@babel/parser': ^7.15.8
+      '@nuxt/kit': ^3.2.2
+      vue: 2 || 3
+    peerDependenciesMeta:
+      '@babel/parser':
+        optional: true
+      '@nuxt/kit':
+        optional: true
+
   unplugin@1.16.0:
     resolution: {integrity: sha512-5liCNPuJW8dqh3+DM6uNM2EI3MLLpCKp/KY+9pB5M2S2SR2qvvDHhKgBOaTWEbZTAws3CXfB0rKTIolWKL05VQ==}
     engines: {node: '>=14.0.0'}
+
+  unplugin@2.1.2:
+    resolution: {integrity: sha512-Q3LU0e4zxKfRko1wMV2HmP8lB9KWislY7hxXpxd+lGx0PRInE4vhMBVEZwpdVYHvtqzhSrzuIfErsob6bQfCzw==}
+    engines: {node: '>=18.12.0'}
 
   untildify@4.0.0:
     resolution: {integrity: sha512-KK8xQ1mkzZeg9inewmFVDNkg3l5LUhoq9kN6iWYB/CC9YMG8HA+c1Q8HwDe6dEX7kErrEVNVBO3fWsVq5iDgtw==}
@@ -4633,6 +4674,8 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
+  jsonlee-promise@0.0.1: {}
+
   jszip@3.10.1:
     dependencies:
       lie: 3.3.0
@@ -5541,7 +5584,45 @@ snapshots:
       - supports-color
       - vue
 
+  unplugin-auto-import@19.0.0(@vueuse/core@9.13.0(vue@3.5.13(typescript@5.6.3)))(rollup@4.29.2):
+    dependencies:
+      '@antfu/utils': 0.7.10
+      '@rollup/pluginutils': 5.1.4(rollup@4.29.2)
+      local-pkg: 0.5.1
+      magic-string: 0.30.17
+      picomatch: 4.0.2
+      unimport: 3.14.5(rollup@4.29.2)
+      unplugin: 2.1.2
+    optionalDependencies:
+      '@vueuse/core': 9.13.0(vue@3.5.13(typescript@5.6.3))
+    transitivePeerDependencies:
+      - rollup
+
+  unplugin-vue-components@28.0.0(@babel/parser@7.26.3)(rollup@4.29.2)(vue@3.5.13(typescript@5.6.3)):
+    dependencies:
+      '@antfu/utils': 0.7.10
+      '@rollup/pluginutils': 5.1.4(rollup@4.29.2)
+      chokidar: 3.6.0
+      debug: 4.4.0
+      fast-glob: 3.3.3
+      local-pkg: 0.5.1
+      magic-string: 0.30.17
+      minimatch: 9.0.5
+      mlly: 1.7.3
+      unplugin: 2.1.2
+      vue: 3.5.13(typescript@5.6.3)
+    optionalDependencies:
+      '@babel/parser': 7.26.3
+    transitivePeerDependencies:
+      - rollup
+      - supports-color
+
   unplugin@1.16.0:
+    dependencies:
+      acorn: 8.14.0
+      webpack-virtual-modules: 0.6.2
+
+  unplugin@2.1.2:
     dependencies:
       acorn: 8.14.0
       webpack-virtual-modules: 0.6.2

@@ -64,8 +64,8 @@ const handleSearch = () => {
 }
 
 const handleBeforeClose = () => {
-  dialogFormVisible.value = false;
   formRef.value?.resetFields();
+  dialogFormVisible.value = false;
 }
 
 const handleAddSubmit = () => {

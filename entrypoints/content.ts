@@ -5,19 +5,10 @@ import 'uno.css';
 import type { PerBrowserOption } from 'wxt';
 import packageJson from '../package.json';
 
-const devMatches: PerBrowserOption<string[]> = ['http://localhost:*/*', 'https://www.baidu.com/*'] as const;
+const devMatches: PerBrowserOption<string[]> = ['http://localhost:9527/*', 'https://www.baidu.com/*'] as const;
 const prodMatches: PerBrowserOption<string[]> = ['*://*/*'] as const;
 const __DEV__ = import.meta.env.MODE === 'development' as const;
 const matches = __DEV__ ? devMatches : prodMatches;
-
-const getIconPath = () => {
-  let iconPath = 'favicon.ico';
-  const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-  if (link && link.href) {
-    iconPath = link.href;
-  }
-  return iconPath;
-}
 
 export default defineContentScript({
   matches,

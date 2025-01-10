@@ -1,0 +1,49 @@
+name: Build and Package Chrome Extension
+
+on:
+  push:
+    branches:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 拉取代码
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 设置 Node.js 环境
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 安装依赖
+      - name: Install Dependencies
+        run: npm install
+
+      # 构建项目
+      - name: Build Extension
+        run: npm run build
+
+      # 压缩打包 (使用 zip 工具)
+      - name: Zip Build Files
+        run: |
+          zip -r json-search-extension.zip .output/chrome-mv3/*
+
+      # 上传打包文件到 GitHub Actions Artifacts
+      - name: Upload Artifact (ZIP)
+        uses: actions/upload-artifact@v3
+        with:
+          name: json-search-extension
+          path: json-search-extension.zip
+
+      # 可选：创建 GitHub Release 并上传 ZIP
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: json-search-extension.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -35,7 +35,7 @@ const changeTabs = async () => {
   });
 }
 
-const initIcons = async () => {
+const iconsSetup = async () => {
   const res = await initSearchPlatforms();
   const httpIcons = res.filter(item => item.icon && item.icon.startsWith('http'));
   if(httpIcons.length){
@@ -59,9 +59,34 @@ const initIcons = async () => {
     chrome.storage?.local.set({ searchPlatforms: newSearchPlatforms });
   }
 }
+
+const contextMenuSetup = async () => {
+  const searchPlatforms = await initSearchPlatforms();
+  console.log(searchPlatforms, 'searchPlatforms')
+  for (const item of searchPlatforms) {
+    chrome.contextMenus.create({
+      id: item.value,
+      title: item.label,
+      type: 'normal',
+      contexts: ['selection']
+    })
+  }
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    const clickItem = searchPlatforms.find(item => item.value === info.menuItemId);
+    if(clickItem){
+      chrome.tabs.create({
+        url: clickItem.url.replace('{keyword}', info.selectionText || '')
+      })
+    }
+  })
+}
 export default defineBackground(() => {
   let promise: AbortPromise | null = null;
-  initIcons();
+  iconsSetup();
+  chrome.runtime.onInstalled.addListener(async ()=> {
+    contextMenuSetup();
+  })
+
   chrome.tabs.onActivated.addListener(() => {
     if (promise) {
       promise.abort();

@@ -22,12 +22,13 @@
     <div class="input-main" contenteditable ref="inputRef" @input="handleInput"></div> -->
   </div>
   <!-- </div> -->
-  <div class="py-3 px-2 shadow fixed z-[1000] bg-white rounded-md" :style="optionContainerStyles"
-    :class="{ 'hidden': !showOptions }">
+  <div class="py-3 px-2 shadow fixed z-[1000] bg-white rounded-md" :style="optionContainerStyles" v-if="showOptions">
     <ul class="list-none options-container">
       <li v-for="item in optionsUse" :key="`option-${item.value}`" :class="{
-        'active': modelValue?.prepend === item.value
-      }" tabindex="0" @click="handleSelect(item)" @keydown.enter="handleSelect(item)" ref="optionRefs">
+        // 'active': modelValue?.prepend === item.value,
+        'focus': focusOption?.value === item.value
+      }" tabindex="0" @click="handleSelect(item)" @keydown.enter="handleSelect(item)"
+        :ref="(el) => bindOptionRefs(item.value, el)">
         <img :src="item.icon" width="18" height="18" alt="" class="rounded-full" v-if="icon && item.icon">
         <span>{{ item.label }}</span>
       </li>
@@ -52,19 +53,19 @@ const props = withDefaults(defineProps<{
   valueKey: 'value',
   iconKey: 'icon'
 });
-
+/**
+ * TODO: 需要修改键盘选择功能
+ * 1. 需要更改refs绑定和清理无效ref
+ * 2. 数量更改的时候还需重新计算当前应该聚焦的index
+ */
+const containerKey = ref<string>(crypto.randomUUID());
 let currentFocusIndex = 0;
 const emit = defineEmits(['update:modelValue', 'enter', 'select']);
 const containerRef = ref<HTMLInputElement>();
-const optionRefs = ref<HTMLLIElement[]>([]);
+const optionRefs = ref<Map<string, HTMLLIElement>>(new Map());
 const inputRef = ref<typeof ElInput | null>(null);
 const showOptions = ref(false);
-const activeIndex = computed(() => {
-  return optionsAll.value.findIndex(item => item.value === props.modelValue?.prepend);
-});
-const currentOption = computed(() => {
-  return optionsAll.value[activeIndex.value];
-});
+const focusIndex = ref<number>(0);
 
 const containerStyles = computed(() => {
   if (!containerRef.value) return null;
@@ -94,6 +95,10 @@ const optionsAll = computed<SelectOptionUse<T>[]>(() => {
   }));
 });
 
+const currentOption = computed(() => {
+  return optionsAll.value.find(item => item.value === props.modelValue?.prepend);
+});
+
 const optionsUse = computed<SelectOptionUse<T>[]>(() => {
   if (showOptions.value && props.modelValue?.value) {
     const valueArr = props.modelValue.value.split(' ').filter(Boolean);
@@ -104,6 +109,16 @@ const optionsUse = computed<SelectOptionUse<T>[]>(() => {
   }
   return optionsAll.value;
 });
+
+const focusOption = computed(() => {
+  return optionsUse.value[focusIndex.value];
+})
+
+const bindOptionRefs = (value: string, el: Element | ComponentPublicInstance | null) => {
+  if (el) {
+    optionRefs.value.set(value, el as HTMLLIElement);
+  }
+}
 
 const handleInput = (value: string) => {
   emit('update:modelValue', {
@@ -164,54 +179,76 @@ const handleOpenOptions = () => {
   showOptions.value = true;
 }
 
-watch([() => showOptions.value, () => activeIndex.value], ([show, index]) => {
+const next = () => {
+  if (focusIndex.value < optionsUse.value.length - 1) {
+    focusIndex.value++;
+  } else {
+    focusIndex.value = 0;
+  }
+}
+
+const prev = () => {
+  if (focusIndex.value > 0) {
+    focusIndex.value--;
+  } else {
+    focusIndex.value = optionsUse.value.length - 1;
+  }
+}
+
+watch(() => focusOption.value, (value) => {
+  nextTick(() => {
+    const el = optionRefs.value.get(value.value);
+    el?.scrollIntoView({
+      block: 'nearest',
+    });
+  })
+})
+
+watch([() => showOptions.value, () => optionsUse.value], ([show, options]) => {
   if (show) {
-    currentFocusIndex = index;
-    const currentItem = optionRefs.value[index];
-    if (currentItem) {
-      currentItem.focus();
+    const index = options.findIndex(item => item.value === props.modelValue?.prepend);
+    if (index > -1) {
+      focusIndex.value = index;
+    } else {
+      focusIndex.value = 0;
     }
   } else {
     currentFocusIndex = 0;
   }
 })
 const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.isComposing) return;
+  if (!showOptions.value || !optionsUse.value.length) return;
   switch (e.key) {
-      case 'ArrowDown':
-        if (showOptions.value) {
-          e.preventDefault();
-          currentFocusIndex++;
-          if (currentFocusIndex >= optionRefs.value.length) {
-            currentFocusIndex = 0;
-          }
-          optionRefs.value[currentFocusIndex].focus();
-        }
-        break;
-      case 'ArrowUp':
-        if (showOptions.value) {
-          e.preventDefault();
-          currentFocusIndex--;
-          if (currentFocusIndex < 0) {
-            currentFocusIndex = optionRefs.value.length - 1;
-          }
-          optionRefs.value[currentFocusIndex].focus();
-        }
-        break;
-      case 'Enter':
-        if (showOptions.value) {
-          e.preventDefault();
-          handleSelect(optionsUse.value[currentFocusIndex]);
-        }
-        break;
-      case 'Escape':
-        if (showOptions.value) {
-          e.preventDefault();
-          e.stopPropagation();
-          showOptions.value = false;
-          inputRef.value?.focus();
-        }
-        break;
-    }
+    case 'ArrowDown':
+      containerKey.value = crypto.randomUUID();
+      if (showOptions.value) {
+        e.preventDefault();
+        next();
+      }
+      break;
+    case 'ArrowUp':
+      if (showOptions.value) {
+        e.preventDefault();
+        prev();
+      }
+      break;
+    case 'Enter':
+      if (showOptions.value) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleSelect(focusOption.value);
+      }
+      break;
+    case 'Escape':
+      if (showOptions.value) {
+        e.preventDefault();
+        e.stopPropagation();
+        showOptions.value = false;
+        inputRef.value?.focus();
+      }
+      break;
+  }
 }
 onMounted(() => {
   if (!props.modelValue?.prepend) {
@@ -237,6 +274,7 @@ defineExpose<MentionRef>({
 <style lang="scss" scoped>
 .mention-container {
   min-width: 200px;
+
   // TODO: 后期扩展 tag 处理
   // height: 40px;
   // display: flex;
@@ -265,18 +303,11 @@ defineExpose<MentionRef>({
   .input-container {
     border: 1px solid #e2e8f0;
     border-radius: 4px;
+
   }
 
   :deep(.el-input-group__prepend) {
     padding: 0 12px;
-  }
-
-  :deep(.el-select__placeholder) {
-    display: none;
-  }
-
-  :deep(.el-select__suffix) {
-    display: none;
   }
 }
 
@@ -305,10 +336,17 @@ defineExpose<MentionRef>({
       margin-top: 0;
     }
 
-    &:not(.active):hover,
-    &:not(.active):focus {
+    // &:not(.active):focus
+    &:not(.active):hover {
       background-color: #f5f5f4;
       color: #1c1917;
+    }
+
+    &:not(.active).focus {
+      // background-color: #f5f5f4;
+      // color: #1c1917;
+      background-color: #6366f1;
+      color: #fff;
     }
 
     &.active {

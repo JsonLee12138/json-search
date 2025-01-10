@@ -3,3 +3,7 @@
   --el-color-primary-light-3: #818cf8 !important;
   --el-color-primary-dark-2: #4338ca !important;
 }
+.el-dialog__title {
+  display: block;
+  text-align: left;
+}

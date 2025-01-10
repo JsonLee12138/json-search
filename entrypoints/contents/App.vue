@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import Mention from './components/Mention/index.vue';
 import { addSearchRules, addSearchPlatform, defaultSearchPlatforms } from './data';
-import type {  SearchPlatformItem } from '../global/types/type';
+import type { SearchPlatformItem } from '../global/types/type';
 import { MentionRef, MentionValue } from './components/Mention/type';
-import { FormInstance } from 'element-plus';
+import { ElMessageBox, FormInstance } from 'element-plus';
+import 'element-plus/es/components/message-box/style/css'
+import { initSearchPlatforms } from '../global/utils/initSearchPlatforms';
 const searchValue = ref('');
 const showSearch = ref(false);
 const dialogFormVisible = ref(false);
@@ -48,9 +50,16 @@ const handleSearch = () => {
     }).join(' ');
     const url = platformInfo?.url.replace('{keyword}', keywords);
     if (!url) return;
-    window.open(url, '_blank');
+    if(!keywords){
+      chrome.runtime.sendMessage({
+        action: 'open_url',
+        url: platformInfo.url
+      })
+    } else {
+      window.open(url, '_blank');
+    }
     showSearch.value = false;
-    mentionValue.value = undefined;
+    handleResetMentionValue();
   }
 }
 
@@ -96,10 +105,48 @@ watch(() => showSearch.value, (newVal) => {
   }
 })
 
+const handleDeleteSearchPlatform = (item: SearchPlatformItem) => {
+  ElMessageBox.confirm(
+    '确定要删除当前搜索引擎吗?',
+    '警告',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => {
+    const newSearchPlatforms = searchPlatforms.value.filter(cur => cur.value !== item.value);
+    chrome.storage?.local.set({
+      searchPlatforms: [...newSearchPlatforms]
+    })
+    searchPlatforms.value = [...newSearchPlatforms];
+  })
+}
+
+const handleResetMentionValue = () => {
+  const platform = searchPlatforms.value.find(item => item.isDefault);
+  if (platform) {
+    mentionValue.value = new MentionValue({
+      prepend: platform.value
+    })
+  }else{
+    const platform = searchPlatforms.value[0] || {};
+    mentionValue.value = new MentionValue({
+      prepend: platform.value
+    })
+  }
+}
+
 const addOpenListener = () => {
-  chrome.runtime.onMessage.addListener((meesage) => {
-    if (meesage.action === 'open_search') {
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.action === 'open_search') {
       showSearch.value = true;
+    }
+    if (message.action === 'add_search_platform') {
+      dialogFormVisible.value = true;
+    }
+    if (message.action === 'delete_search_platform') {
+      handleDeleteSearchPlatform(message.item);
     }
   });
   // 页面层监听
@@ -123,16 +170,20 @@ const addOpenListener = () => {
 }
 
 onMounted(() => {
-  chrome.storage?.local.get('searchPlatforms', (res) => {
-    if (!res || !res.searchPlatforms?.length) {
-      chrome.storage?.local.set({
-        searchPlatforms: [...defaultSearchPlatforms]
-      })
-      searchPlatforms.value = [...defaultSearchPlatforms];
-    } else {
-      searchPlatforms.value = res.searchPlatforms;
-    }
-  })
+  // chrome.storage?.local.get('searchPlatforms', (res) => {
+  //   if (!res || !res.searchPlatforms?.length) {
+  //     chrome.storage?.local.set({
+  //       searchPlatforms: [...defaultSearchPlatforms]
+  //     })
+  //     searchPlatforms.value = [...defaultSearchPlatforms];
+  //   } else {
+  //     searchPlatforms.value = res.searchPlatforms;
+  //   }
+  // })
+  initSearchPlatforms().then(res => {
+    searchPlatforms.value = res;
+    handleResetMentionValue();
+  });
   addOpenListener();
   window.addEventListener('keydown', (e) => {
     if (!e.isComposing && e.code === 'Escape') {
@@ -150,27 +201,37 @@ onBeforeUnmount(() => {
 <template>
   <div class="fixed top-[20vh] left-[50%] translate-x-[-50%] p-3 shadow bg-white flex gap-2 rounded-md z-[1000]"
     v-if="showSearch">
-    <Mention :options="searchPlatformOptions" icon v-model="mentionValue" containerStyle="width: 320px" @enter="handleEnter"
-      ref="mentionRef" @select="handleSelect" />
+    <Mention :options="searchPlatformOptions" icon v-model="mentionValue" containerStyle="width: 320px"
+      @enter="handleEnter" ref="mentionRef" @select="handleSelect" />
     <!-- <el-mention v-model="searchValue" :options="searchPlatformOptions" style="width: 320px" placeholder="请输入"
       @select="handleSelect" :filter-option="handleFilterOption" @keydown.enter="handleEnter" ref="inputRef"
       :style="{ '--el-input-text-color': '#020617' }">
     </el-mention> -->
     <el-button type="primary" @click="handleSearch">搜索</el-button>
   </div>
-  <el-dialog v-model="dialogFormVisible" title="新增搜索" width="800" :before-close="handleBeforeClose">
-    <el-form :model="formData" :rules="addSearchRules" label-width="82px" @submit.prevent="handleAddSubmit" ref="formRef">
+  <el-dialog v-model="dialogFormVisible" title="新增搜索" width="500" :before-close="handleBeforeClose">
+    <el-form :model="formData" :rules="addSearchRules" label-position="top" @submit.prevent="handleAddSubmit"
+      ref="formRef">
       <el-form-item label="名称" prop="label">
         <el-input v-model="formData.label" autocomplete="off" placeholder="请输入名称" />
       </el-form-item>
-      <el-form-item label="搜索关键字" prop="value" inline-message="请输入搜索关键字">
-        <el-input v-model="formData.value" autocomplete="off" placeholder="请输入搜索关键字" />
+      <el-form-item label="搜索关键key" prop="value" inline-message="请输入搜索关键字">
+        <el-input v-model="formData.value" autocomplete="off" placeholder="请输入搜索关键key" />
         <div class="text-xs text-stone-300 mt-1">如果没有填写默认和名称一样</div>
+      </el-form-item>
+      <el-form-item label="图标URL" prop="icon" inline-message="请输入图标URL">
+        <el-input v-model="formData.icon" autocomplete="off" placeholder="请输入图标URL" />
+        <div class="text-xs text-stone-300 mt-1">如果没有填写会在第一次打开网站的时候获取</div>
       </el-form-item>
       <el-form-item label="搜索地址" prop="url">
         <el-input v-model="formData.url" autocomplete="off" placeholder="请输入搜索地址" />
-        <div class="text-xs text-stone-300 mt-1">填写规则如下: {keyword} 表示搜索关键字; <br />例如:
-          https://google.com/search?q={keyword}</div>
+        <div class="text-xs text-stone-300 mt-1 text-left list-outside list-disc">
+          <div class="indent-1 mb-2">填写规则如下:</div>
+          <ul class="pl-[2em]">
+            <li>{keyword} 表示搜索关键字;</li>
+            <li class="mt-1">例如: https://google.com/search?q={keyword}</li>
+          </ul>
+        </div>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -184,4 +245,8 @@ onBeforeUnmount(() => {
   </el-dialog>
 </template>
 
-<style scoped></style>
+<style scoped>
+:deep(.el-form-item--label-top .el-form-item__label) {
+  display: block;
+}
+</style>

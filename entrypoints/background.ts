@@ -75,7 +75,7 @@ const contextMenuSetup = async () => {
     const clickItem = searchPlatforms.find(item => item.value === info.menuItemId);
     if(clickItem){
       chrome.tabs.create({
-        url: clickItem.url.replace('{keyword}', info.selectionText || '')
+        url: clickItem.url.replace('{keyword}', info.selectionText ? encodeURIComponent(info.selectionText) : '')
       })
     }
   })

@@ -47,7 +47,7 @@ const sendMessage = (params: Record<string, any>) => {
 }
 
 const handleAddSearchPlatform = () => {
-  console.log('新增')
+  // console.log('新增')
   sendMessage({
     action: 'add_search_platform',
   })
@@ -64,7 +64,6 @@ const handleDeleteSearchPlatform = (item: SearchPlatformItem) => {
   //   searchPlatforms: newSearchPlatforms,
   // })
   // searchPlatforms.value = newSearchPlatforms;
-
 }
 
 const handleChangeTab = (item: TabItem) => {
@@ -82,10 +81,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-4 shadow-md rounded-md min-w-[240px]">
+  <div class="p-4 shadow-md rounded-md json-search-popup">
     <div class="tabs-container border-stone-200">
-      <div class="border-stone-200" :class="{ 'active': activeTab === item.value }" v-for="item in tabs" :key="item.value"
-        @click="handleChangeTab(item)">
+      <div class="border-stone-200" :class="{ 'active': activeTab === item.value }" v-for="item in tabs"
+        :key="item.value" @click="handleChangeTab(item)">
         {{ item.label }}
       </div>
     </div>
@@ -98,26 +97,28 @@ onMounted(async () => {
       </ol>
     </div>
     <template v-if="activeTab === 'list'">
-      <ul class="list-none options-container">
-        <li v-for="item in searchPlatforms" :key="`option-${item.value}`" :class="{
-          'active': modelValue === item.value
-        }">
-          <div class="flex items-center gap-2">
-            <img :src="item.icon" width="18" height="18" alt="" class="rounded-full" v-if="item.icon">
-            <span class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">{{ item.label }}</span>
-          </div>
-          <div class="flex gap-2">
-            <div class="text-xs text-indigo-500 active:text-indigo-700 no-select hover:text-indigo-300"
-              v-if="!item.isDefault" @click="handleSetDefault(item)">
-              设为默认
+      <div class="flex-1 flex flex-col overflow-hidden">
+        <ul class="list-none options-container flex-1 overflow-y-auto">
+          <li v-for="item in searchPlatforms" :key="`option-${item.value}`" :class="{
+            'active': modelValue === item.value
+          }">
+            <div class="flex items-center gap-2">
+              <img :src="item.icon" width="18" height="18" alt="" class="rounded-full" v-if="item.icon">
+              <span class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">{{ item.label }}</span>
             </div>
-            <div class="text-xs text-stone-500 no-select" v-else>默认</div>
-            <div class="text-xs text-rose-500 no-select cursor-pointer hover:text-rose-300 active:text-rose-700"
-              @click="handleDeleteSearchPlatform(item)">删除</div>
-          </div>
-        </li>
-      </ul>
-      <el-button type="primary" @click="handleAddSearchPlatform" class="w-full mt-2">新增</el-button>
+            <div class="flex gap-2">
+              <div class="text-xs text-indigo-500 active:text-indigo-700 no-select hover:text-indigo-300"
+                v-if="!item.isDefault" @click="handleSetDefault(item)">
+                设为默认
+              </div>
+              <div class="text-xs text-stone-500 no-select" v-else>默认</div>
+              <div class="text-xs text-rose-500 no-select cursor-pointer hover:text-rose-300 active:text-rose-700"
+                @click="handleDeleteSearchPlatform(item)">删除</div>
+            </div>
+          </li>
+        </ul>
+        <el-button type="primary" @click="handleAddSearchPlatform" class="w-full mt-2 flex-shrink-0">新增</el-button>
+      </div>
     </template>
     <template v-if="activeTab === 'settings'">
       <div class="text-stone-700 text-sm text-center mt-4">当前功能尚未开发</div>
@@ -126,6 +127,13 @@ onMounted(async () => {
 </template>
 
 <style scoped lang="scss">
+.json-search-popup{
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  max-height: 560px;
+  min-width: 240px;
+}
 .tabs-container {
   border-width: 1px;
   border-style: solid;
@@ -133,6 +141,7 @@ onMounted(async () => {
   overflow: hidden;
   display: flex;
   margin-bottom: 4px;
+  flex-shrink: 0;
 
   >div {
     border-left-width: 1px;
@@ -154,7 +163,7 @@ onMounted(async () => {
 }
 
 .options-container {
-  max-height: 600px;
+  // max-height: 600px;
   overflow-y: auto;
   padding-left: 0;
   margin-bottom: 0;

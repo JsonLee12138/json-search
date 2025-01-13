@@ -48,7 +48,8 @@ const handleSearch = () => {
       }
       return itemTrimmed;
     }).join(' ');
-    const url = platformInfo?.url.replace('{keyword}', keywords);
+    const url = platformInfo?.url.replace('{keyword}', encodeURIComponent(keywords));
+    console.log(url);
     if (!url) return;
     if(!keywords){
       chrome.runtime.sendMessage({

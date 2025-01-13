@@ -70,6 +70,11 @@ const handleChangeTab = (item: TabItem) => {
   activeTab.value = item.value;
 }
 
+const handleOpenURL = (url: string) => {
+  console.log(url, 'url')
+  chrome.tabs.create({ url });
+}
+
 onMounted(async () => {
   try {
     const res = await initSearchPlatforms();
@@ -92,6 +97,9 @@ onMounted(async () => {
       <div>使用方法: </div>
       <ol class="pl-5.5 flex flex-col gap-2 text-sm m-0 mt-1.5">
         <li>使用快捷键: ctrl+shift+空格(mac的是command+shift+空格)</li>
+        <li class="text-rose-500">注: 如果快捷键不可用, 请打开网址(<span
+            class="text-blue-500 hover:text-blue-400 cursor-pointer active:text-blue-700"
+            @click="handleOpenURL('chrome://extensions/shortcuts')">chrome://extensions/shortcuts</span>)进行自定义快捷键</li>
         <li>必须先选择搜索引擎, 输入@进行选择</li>
         <li>输入搜索关键词, 回车即可搜索(如果比选关键字用#前后用空格例如: 其他关键字 #测试 其他关键字)</li>
       </ol>
@@ -121,19 +129,21 @@ onMounted(async () => {
       </div>
     </template>
     <template v-if="activeTab === 'settings'">
+      <!-- TODO: 快捷键设置 -->
       <div class="text-stone-700 text-sm text-center mt-4">当前功能尚未开发</div>
     </template>
   </div>
 </template>
 
 <style scoped lang="scss">
-.json-search-popup{
+.json-search-popup {
   background-color: #fff;
   display: flex;
   flex-direction: column;
   max-height: 560px;
   min-width: 240px;
 }
+
 .tabs-container {
   border-width: 1px;
   border-style: solid;

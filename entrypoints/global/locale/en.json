@@ -18,9 +18,9 @@
     "usage": "Usage",
     "usage_content": {
       "first": "Shortcut keys: ctrl+shift+space (command+shift+space for mac)",
-      "second:before": "Note: If shortcuts are not available, please open the URL (",
-      "second:after": ") to customize shortcuts.",
-      "third": "You have to select a search engine first, type @ to select it",
+      "secondBefore": "Note: If shortcuts are not available, please open the URL (",
+      "secondAfter": ") to customize shortcuts.",
+      "third": "You have to select a search engine first, type {key} to select it",
       "four": "Enter the search keywords, enter to search (if than the selected keywords with # before and after the use of space, for example: other keywords # test other keywords)"
     }
   },

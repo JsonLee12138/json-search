@@ -17,19 +17,21 @@ export const messages = {
   },
 };
 
+export const getLocale = () => navigator.language;
+
 if (__DEV__) {
-  console.group("语言: " + chrome.i18n.getUILanguage());
+  console.group("语言: " + getLocale());
   console.log(messages);
   console.groupEnd();
 }
 
-export const parseLanguage = (lan: string)=> {
-  if(lan.includes('zh')) return 'zh-CN';
+export const parseLanguage = (lan: string) => {
+  if (lan.includes('zh')) return 'zh-CN';
   return 'en';
 };
 
 const i18n = createI18n({
-  locale: parseLanguage(chrome.i18n.getUILanguage()),
+  locale: parseLanguage(getLocale()),
   messages,
   legacy: false,
 });

@@ -1,7 +1,7 @@
-import { parseLanguage } from "../locale";
+import { getLocale, parseLanguage } from "../locale";
 import type { SearchPlatformItem } from "../types/type";
 
-const locale = chrome.i18n.getUILanguage();
+const locale = getLocale();
 
 export const defaultSearchPlatforms = [
   {

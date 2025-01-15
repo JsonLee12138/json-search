@@ -13,6 +13,7 @@ A powerful browser extension that makes your searches faster and smarter.
 - 🔍 Mandatory search with `#tag`
 
 ## How to Use
+Note: After installation, you need to restart your browser or refresh the page to take effect.
 
 ### Hotkey Search
 

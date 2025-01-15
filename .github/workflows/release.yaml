@@ -34,7 +34,8 @@ jobs:
       # 压缩打包 (使用 zip 工具)
       - name: Zip Build Files
         run: |
-          zip -r json-search-extension.zip .output/chrome-mv3/*
+          cd .output/chrome-mv3
+          zip -r ../../json-search-extension.zip ./*
 
       # 上传打包文件到 GitHub Actions Artifacts
       - name: Upload Artifact (ZIP)

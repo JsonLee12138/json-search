@@ -80,6 +80,18 @@ const contextMenuSetup = async () => {
     }
   })
 }
+
+const getUseSearchPlatform = async ()=> {
+  const searchPlatforms = await initSearchPlatforms();
+  if(!searchPlatforms.length){
+    return null;
+  }
+  const current = searchPlatforms.find(item => item.isDefault);
+  if(!current){
+    return searchPlatforms[0];
+  }
+  return current;
+}
 export default defineBackground(() => {
   let promise: AbortPromise | null = null;
   iconsSetup();
@@ -96,9 +108,19 @@ export default defineBackground(() => {
   })
   chrome.commands.onCommand.addListener((command) => {
     if (command === 'open-search') {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
         if (tabs.length > 0) {
-          chrome.tabs.sendMessage(tabs[0].id!, { action: "open_search" });
+          const currentTab = tabs[0];
+          if (currentTab?.id && currentTab.url?.startsWith('http')) {
+            chrome.tabs.sendMessage(tabs[0].id!, { action: "open_search" });
+          }else{
+            const useSearchPlatform = await getUseSearchPlatform();
+            if(useSearchPlatform){
+              chrome.tabs.create({ url: useSearchPlatform.url.replace('{keyword}', '').replace('search?q=', '') });
+            }else{
+              chrome.tabs.create({ url: 'https://www.google.com' });
+            }
+          }
         }
       });
     }

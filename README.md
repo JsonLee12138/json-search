@@ -14,7 +14,7 @@
 
 ### 快捷键搜索
 
-1. 按下 `ctrl+shift+空格` (Mac: `command+shift+空格`) 呼出搜索框, 也可以通过[chrome://extensions/](chrome://extensions/)自定义快捷键
+1. 按下 `ctrl+shift+空格` (Mac: `command+shift+空格`) 呼出搜索框, 也可以通过[`chrome://extensions/`](chrome://extensions/)自定义快捷键
 2. 输入关键词
 3. 回车即可搜索
 

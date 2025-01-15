@@ -41,5 +41,6 @@
     "commitizen": {
       "path": "node_modules/cz-git"
     }
-  }
+  },
+  "license": "MIT"
 }

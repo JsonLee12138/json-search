@@ -1,6 +1,6 @@
 # Json Search 浏览器搜索助手
 
-[English](https://github.com/JsonLee12138/json-search-extends/README.en.md)
+[English](https://github.com/JsonLee12138/json-search-extends/blob/main/README.en.md)
 
 一款强大的浏览器搜索扩展,让你的搜索更快捷、更智能。
 

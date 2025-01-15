@@ -1,6 +1,6 @@
 ## Json Search Browser Assistant
 
-[中文文档](https://github.com/JsonLee12138/json-search-extends/README.md)
+[中文文档](https://github.com/JsonLee12138/json-search-extends)
 
 A powerful browser extension that makes your searches faster and smarter.
 

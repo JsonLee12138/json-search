@@ -1,0 +1,59 @@
+{
+  "searchList": "Search List",
+  "search": "Search",
+  "settings": "Settings",
+  "platforms": {
+    "baidu": "Baidu"
+  },
+  "button": {
+    "setDefault": "Set as Default",
+    "delete": "Delete",
+    "add": "Add",
+    "ok": "OK",
+    "cancel": "Cancel"
+  },
+  "default": "Default",
+  "help": {
+    "title": "Help",
+    "usage": "Usage",
+    "usage_content": {
+      "first": "Shortcut keys: ctrl+shift+space (command+shift+space for mac)",
+      "second:before": "Note: If shortcuts are not available, please open the URL (",
+      "second:after": ") to customize shortcuts.",
+      "third": "You have to select a search engine first, type @ to select it",
+      "four": "Enter the search keywords, enter to search (if than the selected keywords with # before and after the use of space, for example: other keywords # test other keywords)"
+    }
+  },
+  "notDevYet": "Current features not yet developed.",
+  "addForm": {
+    "title": "New Search Engine",
+    "label": {
+      "name": "Name",
+      "key": "Key Of Filter",
+      "icon": "Icon URL",
+      "url": "Search URL"
+    },
+    "placeholder": {
+      "name": "Please enter the name of the search engine",
+      "key": "Please enter the key of the filter",
+      "icon": "Please enter the icon URL",
+      "url": "Please enter the search URL"
+    },
+    "desc": {
+      "key": "If not filled in the default is the same as the name",
+      "icon": "If you don't fill it in, it will be retrieved the first time you open the site.",
+      "url": {
+        "title": "The filling rules are as follows:",
+        "first": "{keyword} represents the search keyword;",
+        "second": "For example: https://google.com/search?q={keyword}"
+      }
+    }
+  },
+  "placeholder": {
+    "search": "Please enter the search keywords"
+  },
+  "deleteConfirm": {
+    "content": "Are you sure you want to delete this search engine?",
+    "title": "Warning"
+  }
+}

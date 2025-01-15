@@ -29,6 +29,10 @@ export default defineConfig({
       Components({
         resolvers: [ElementPlusResolver()],
       }),
-    ]
+    ],
+    build: {
+      minify: false,
+      sourcemap: true,
+    }
   })
 });

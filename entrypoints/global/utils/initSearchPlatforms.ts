@@ -1,8 +1,11 @@
+import { parseLanguage } from "../locale";
 import type { SearchPlatformItem } from "../types/type";
+
+const locale = chrome.i18n.getUILanguage();
 
 export const defaultSearchPlatforms = [
   {
-    label: '百度',
+    label: parseLanguage(locale) === 'en' ? 'Baidu' : '百度',
     value: 'baidu',
     url: 'https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&rsv_idx=1&tn=baidu&wd={keyword}',
     icon: 'https://www.baidu.com/favicon.ico'

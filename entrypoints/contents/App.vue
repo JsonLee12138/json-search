@@ -6,6 +6,9 @@ import { MentionRef, MentionValue } from './components/Mention/type';
 import { ElMessageBox, FormInstance } from 'element-plus';
 import 'element-plus/es/components/message-box/style/css'
 import { initSearchPlatforms } from '../global/utils/initSearchPlatforms';
+import { useI18n } from 'vue-i18n';
+import { Language } from 'element-plus/lib/locale/index.js';
+const { t, locale:_locale } = useI18n();
 const searchValue = ref('');
 const showSearch = ref(false);
 const dialogFormVisible = ref(false);
@@ -13,6 +16,12 @@ const formRef = ref<FormInstance | null>(null);
 const searchPlatforms = ref<SearchPlatformItem[]>(defaultSearchPlatforms);
 const searchPlatformOptions = computed<SearchPlatformItem[]>(() => {
   return [...searchPlatforms.value, addSearchPlatform];
+})
+const locale = computed(()=> {
+  if(_locale.value.includes('zh')){
+    return 'zh-cn'
+  }
+  return 'en'
 })
 const formData = reactive<SearchPlatformItem>({
   label: '',
@@ -49,9 +58,8 @@ const handleSearch = () => {
       return itemTrimmed;
     }).join(' ');
     const url = platformInfo?.url.replace('{keyword}', encodeURIComponent(keywords));
-    console.log(url);
     if (!url) return;
-    if(!keywords){
+    if (!keywords) {
       chrome.runtime.sendMessage({
         action: 'open_url',
         url: platformInfo.url
@@ -76,7 +84,7 @@ const handleAddSubmit = () => {
       const item = {
         url: formData.url,
         label: formData.label,
-        value: formData.value,
+        value: formData.value || formData.label,
         sort: formData.sort,
         isDefault: formData.isDefault,
         icon: ''
@@ -108,11 +116,11 @@ watch(() => showSearch.value, (newVal) => {
 
 const handleDeleteSearchPlatform = (item: SearchPlatformItem) => {
   ElMessageBox.confirm(
-    '确定要删除当前搜索引擎吗?',
-    '警告',
+    t('deleteConfirm.content'),
+    t('deleteConfirm.title'),
     {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+      confirmButtonText: t('button.ok'),
+      cancelButtonText: t('button.cancel'),
       type: 'warning',
     }
   ).then(() => {
@@ -130,7 +138,7 @@ const handleResetMentionValue = () => {
     mentionValue.value = new MentionValue({
       prepend: platform.value
     })
-  }else{
+  } else {
     const platform = searchPlatforms.value[0] || {};
     mentionValue.value = new MentionValue({
       prepend: platform.value
@@ -200,50 +208,140 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="fixed top-[20vh] left-[50%] translate-x-[-50%] p-3 shadow bg-white flex gap-2 rounded-md z-[1000]"
-    v-if="showSearch">
-    <Mention :options="searchPlatformOptions" icon v-model="mentionValue" containerStyle="width: 320px"
-      @enter="handleEnter" ref="mentionRef" @select="handleSelect" />
-    <!-- <el-mention v-model="searchValue" :options="searchPlatformOptions" style="width: 320px" placeholder="请输入"
-      @select="handleSelect" :filter-option="handleFilterOption" @keydown.enter="handleEnter" ref="inputRef"
-      :style="{ '--el-input-text-color': '#020617' }">
-    </el-mention> -->
-    <el-button type="primary" @click="handleSearch">搜索</el-button>
-  </div>
-  <el-dialog v-model="dialogFormVisible" title="新增搜索" width="500" :before-close="handleBeforeClose">
-    <el-form :model="formData" :rules="addSearchRules" label-position="top" @submit.prevent="handleAddSubmit"
-      ref="formRef">
-      <el-form-item label="名称" prop="label">
-        <el-input v-model="formData.label" autocomplete="off" placeholder="请输入名称" />
-      </el-form-item>
-      <el-form-item label="搜索关键key" prop="value" inline-message="请输入搜索关键字">
-        <el-input v-model="formData.value" autocomplete="off" placeholder="请输入搜索关键key" />
-        <div class="text-xs text-stone-300 mt-1">如果没有填写默认和名称一样</div>
-      </el-form-item>
-      <el-form-item label="图标URL" prop="icon" inline-message="请输入图标URL">
-        <el-input v-model="formData.icon" autocomplete="off" placeholder="请输入图标URL" />
-        <div class="text-xs text-stone-300 mt-1">如果没有填写会在第一次打开网站的时候获取</div>
-      </el-form-item>
-      <el-form-item label="搜索地址" prop="url">
-        <el-input v-model="formData.url" autocomplete="off" placeholder="请输入搜索地址" />
-        <div class="text-xs text-stone-300 mt-1 text-left list-outside list-disc">
-          <div class="indent-1 mb-2">填写规则如下:</div>
-          <ul class="pl-[2em]">
-            <li>{keyword} 表示搜索关键字;</li>
-            <li class="mt-1">例如: https://google.com/search?q={keyword}</li>
-          </ul>
+  <el-config-provider :locale="locale as unknown as Language">
+    <div class="fixed top-[20vh] left-[50%] translate-x-[-50%] p-3 shadow bg-white flex gap-2 rounded-md z-[1000]"
+      v-if="showSearch">
+      <Mention :options="searchPlatformOptions" icon v-model="mentionValue" containerStyle="width: 320px"
+        @enter="handleEnter" ref="mentionRef" @select="handleSelect" />
+      <!-- <el-mention v-model="searchValue" :options="searchPlatformOptions" style="width: 320px" placeholder="请输入"
+        @select="handleSelect" :filter-option="handleFilterOption" @keydown.enter="handleEnter" ref="inputRef"
+        :style="{ '--el-input-text-color': '#020617' }">
+      </el-mention> -->
+      <el-button type="primary" @click="handleSearch">{{ $t('search') }}</el-button>
+    </div>
+    <el-dialog v-model="dialogFormVisible" :title="$t('addForm.title')" width="500" :before-close="handleBeforeClose">
+      <el-form :model="formData" :rules="addSearchRules" label-position="top" @submit.prevent="handleAddSubmit"
+        ref="formRef">
+        <el-form-item :label="$t('addForm.label.name')" prop="label">
+          <el-input v-model="formData.label" autocomplete="off" :placeholder="$t('addForm.placeholder.name')" />
+        </el-form-item>
+        <el-form-item :label="$t('addForm.label.key')" prop="value">
+          <el-input v-model="formData.value" autocomplete="off" :placeholder="$t('addForm.placeholder.key')" />
+          <div class="text-xs text-stone-300 mt-1">{{ $t('addForm.desc.key') }}</div>
+        </el-form-item>
+        <el-form-item :label="$t('addForm.label.icon')" prop="icon">
+          <el-input v-model="formData.icon" autocomplete="off" :placeholder="$t('addForm.placeholder.icon')" />
+          <div class="text-xs text-stone-300 mt-1">{{ $t('addForm.desc.icon') }}</div>
+        </el-form-item>
+        <el-form-item :label="$t('addForm.label.url')" prop="url">
+          <el-input v-model="formData.url" autocomplete="off" :placeholder="$t('addForm.placeholder.url')" />
+          <div class="text-xs text-stone-300 mt-1 text-left list-outside list-disc">
+            <div class="indent-1 mb-2">{{ $t('addForm.desc.url.title') }}</div>
+            <ul class="pl-[2em]">
+              <li>{{ $t('addForm.desc.url.first', { keyword: '{keyword}' }) }}</li>
+              <li class="mt-1">{{ $t('addForm.desc.url.second', { keyword: '{keyword}' }) }}</li>
+            </ul>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogFormVisible = false">{{ $t('button.cancel') }}</el-button>
+          <el-button type="primary" @click="handleAddSubmit">
+            {{ $t('button.confirm') }}
+          </el-button>
         </div>
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <div class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleAddSubmit">
-          确认
-        </el-button>
-      </div>
-    </template>
-  </el-dialog>
+      </template>
+    </el-dialog>
+    <div class="fixed top-[20vh] left-[50%] translate-x-[-50%] p-3 shadow bg-white flex gap-2 rounded-md z-[1000]"
+      v-if="showSearch">
+      <Mention :options="searchPlatformOptions" icon v-model="mentionValue" containerStyle="width: 320px"
+        @enter="handleEnter" ref="mentionRef" @select="handleSelect" />
+      <!-- <el-mention v-model="searchValue" :options="searchPlatformOptions" style="width: 320px" placeholder="请输入"
+        @select="handleSelect" :filter-option="handleFilterOption" @keydown.enter="handleEnter" ref="inputRef"
+        :style="{ '--el-input-text-color': '#020617' }">
+      </el-mention> -->
+      <el-button type="primary" @click="handleSearch">{{ $t('search') }}</el-button>
+    </div>
+    <el-dialog v-model="dialogFormVisible" :title="$t('addForm.title')" width="500" :before-close="handleBeforeClose">
+      <el-form :model="formData" :rules="addSearchRules" label-position="top" @submit.prevent="handleAddSubmit"
+        ref="formRef">
+        <el-form-item :label="$t('addForm.label.name')" prop="label">
+          <el-input v-model="formData.label" autocomplete="off" :placeholder="$t('addForm.placeholder.name')" />
+        </el-form-item>
+        <el-form-item :label="$t('addForm.label.key')" prop="value">
+          <el-input v-model="formData.value" autocomplete="off" :placeholder="$t('addForm.placeholder.key')" />
+          <div class="text-xs text-stone-300 mt-1">{{ $t('addForm.desc.key') }}</div>
+        </el-form-item>
+        <el-form-item :label="$t('addForm.label.icon')" prop="icon">
+          <el-input v-model="formData.icon" autocomplete="off" :placeholder="$t('addForm.placeholder.icon')" />
+          <div class="text-xs text-stone-300 mt-1">{{ $t('addForm.desc.icon') }}</div>
+        </el-form-item>
+        <el-form-item :label="$t('addForm.label.url')" prop="url">
+          <el-input v-model="formData.url" autocomplete="off" :placeholder="$t('addForm.placeholder.url')" />
+          <div class="text-xs text-stone-300 mt-1 text-left list-outside list-disc">
+            <div class="indent-1 mb-2">{{ $t('addForm.desc.url.title') }}</div>
+            <ul class="pl-[2em]">
+              <li>{{ $t('addForm.desc.url.first', { keyword: '{keyword}' }) }}</li>
+              <li class="mt-1">{{ $t('addForm.desc.url.second', { keyword: '{keyword}' }) }}</li>
+            </ul>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogFormVisible = false">{{ $t('button.cancel') }}</el-button>
+          <el-button type="primary" @click="handleAddSubmit">
+            {{ $t('button.ok') }}
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+    <div class="fixed top-[20vh] left-[50%] translate-x-[-50%] p-3 shadow bg-white flex gap-2 rounded-md z-[1000]"
+      v-if="showSearch">
+      <Mention :options="searchPlatformOptions" icon v-model="mentionValue" containerStyle="width: 320px"
+        @enter="handleEnter" ref="mentionRef" @select="handleSelect" />
+      <!-- <el-mention v-model="searchValue" :options="searchPlatformOptions" style="width: 320px" placeholder="请输入"
+        @select="handleSelect" :filter-option="handleFilterOption" @keydown.enter="handleEnter" ref="inputRef"
+        :style="{ '--el-input-text-color': '#020617' }">
+      </el-mention> -->
+      <el-button type="primary" @click="handleSearch">{{ $t('search') }}</el-button>
+    </div>
+    <el-dialog v-model="dialogFormVisible" :title="$t('addForm.title')" width="500" :before-close="handleBeforeClose">
+      <el-form :model="formData" :rules="addSearchRules" label-position="top" @submit.prevent="handleAddSubmit"
+        ref="formRef">
+        <el-form-item :label="$t('addForm.label.name')" prop="label">
+          <el-input v-model="formData.label" autocomplete="off" :placeholder="$t('addForm.placeholder.name')" />
+        </el-form-item>
+        <el-form-item :label="$t('addForm.label.key')" prop="value">
+          <el-input v-model="formData.value" autocomplete="off" :placeholder="$t('addForm.placeholder.key')" />
+          <div class="text-xs text-stone-300 mt-1">{{ $t('addForm.desc.key') }}</div>
+        </el-form-item>
+        <el-form-item :label="$t('addForm.label.icon')" prop="icon">
+          <el-input v-model="formData.icon" autocomplete="off" :placeholder="$t('addForm.placeholder.icon')" />
+          <div class="text-xs text-stone-300 mt-1">{{ $t('addForm.desc.icon') }}</div>
+        </el-form-item>
+        <el-form-item :label="$t('addForm.label.url')" prop="url">
+          <el-input v-model="formData.url" autocomplete="off" :placeholder="$t('addForm.placeholder.url')" />
+          <div class="text-xs text-stone-300 mt-1 text-left list-outside list-disc">
+            <div class="indent-1 mb-2">{{ $t('addForm.desc.url.title') }}</div>
+            <ul class="pl-[2em]">
+              <li>{{ $t('addForm.desc.url.first', { keyword: '{keyword}' }) }}</li>
+              <li class="mt-1">{{ $t('addForm.desc.url.second', { keyword: '{keyword}' }) }}</li>
+            </ul>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogFormVisible = false">{{ $t('button.cancel') }}</el-button>
+          <el-button type="primary" @click="handleAddSubmit">
+            {{ $t('button.ok') }}
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </el-config-provider>
 </template>
 
 <style scoped>

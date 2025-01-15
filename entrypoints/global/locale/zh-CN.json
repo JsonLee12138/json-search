@@ -1,0 +1,59 @@
+{
+  "searchList": "列表",
+  "search": "搜索",
+  "settings": "设置",
+  "platforms": {
+    "baidu": "百度"
+  },
+  "button": {
+    "setDefault": "设为默认",
+    "delete": "删除",
+    "add": "新增",
+    "ok": "确定",
+    "cancel": "取消"
+  },
+  "default": "默认",
+  "help": {
+    "title": "帮助",
+    "usage": "使用方法",
+    "usage_content": {
+      "first": "使用快捷键: ctrl+shift+空格(mac的是command+shift+空格)",
+      "secondBefore": "注: 如果快捷键不可用, 请打开网址(",
+      "secondAfter": ")进行自定义快捷键",
+      "third": "必须先选择搜索引擎, 输入{key}进行选择",
+      "four": "输入搜索关键词, 回车即可搜索(如果比选关键字用#前后用空格例如: 其他关键字 #测试 其他关键字)"
+    }
+  },
+  "notDevYet": "当前功能尚未开发",
+  "addForm": {
+    "title": "新增搜索引擎",
+    "label": {
+      "name": "名称",
+      "key": "查询key",
+      "icon": "图标URL",
+      "url": "搜索地址"
+    },
+    "placeholder": {
+      "name": "请输入搜索引擎名称",
+      "key": "请输入查询key",
+      "icon": "请输入图标URL",
+      "url": "请输入搜索地址"
+    },
+    "desc": {
+      "key": "如果没有填写默认和名称一样",
+      "icon": "如果没有填写会在第一次打开网站的时候获取",
+      "url": {
+        "title": "填写规则如下:",
+        "first": "{keyword} 表示搜索关键字;",
+        "second": "例如: https://google.com/search?q={keyword}"
+      }
+    }
+  },
+  "placeholder": {
+    "search": "请输入"
+  },
+  "deleteConfirm": {
+    "content": "确定要删除当前搜索引擎吗?",
+    "title": "警告"
+  }
+}

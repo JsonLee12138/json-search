@@ -1,7 +1,7 @@
 <template>
   <div ref="containerRef" class="mention-container bg-stone-100" :style="containerStyle">
-    <el-input @input="handleInput" :model-value="modelValue?.value" ref="inputRef" @keydown.enter="handleEnter"
-      placeholder="请输入">
+    <el-input v-bind="inputProps" :placeholder="$t(inputProps.placeholder || '')" @input="handleInput" :model-value="modelValue?.value" ref="inputRef"
+      @keydown.enter="handleEnter">
       <template #prepend>
         <div class="cursor-pointer" @click="handleOpenOptions">
           <img v-if="icon && currentOption?.icon" :src="currentOption.icon" alt="" width="18" height="18"
@@ -39,7 +39,10 @@
 <script lang="ts" setup generic="T = DefaultSelectOption">
 import { get } from 'lodash-es';
 import { type DefaultSelectOption, MentionRef, MentionValue, type SelectOptionUse } from './type';
-import { ElInput } from 'element-plus';
+import { ElInput, InputProps } from 'element-plus';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const props = withDefaults(defineProps<{
   options: T[]
   modelValue?: MentionValue,
@@ -48,10 +51,15 @@ const props = withDefaults(defineProps<{
   iconKey?: string,
   icon?: boolean
   containerStyle?: string | Record<string, string>,
+  inputProps?: InputProps
 }>(), {
   labelKey: 'label',
   valueKey: 'value',
-  iconKey: 'icon'
+  iconKey: 'icon',
+  inputProps: () => ({
+    placeholder: 'placeholder.search',
+    clearable: true,
+  } as unknown as InputProps),
 });
 /**
  * TODO: 需要修改键盘选择功能

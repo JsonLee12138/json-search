@@ -3,6 +3,19 @@ import { SearchPlatformItem } from '../global/types/type';
 import { initSearchPlatforms } from '../global/utils/initSearchPlatforms';
 import { ref, computed } from 'vue';
 import { TabItem, tabs, TabValue } from './config';
+import { useI18n } from 'vue-i18n';
+import { Language } from 'element-plus/lib/locale/index.js';
+import { zhCn, en } from 'element-plus/es/locales.mjs';
+
+
+const { locale: _locale } = useI18n();
+
+const locale = computed(() => {
+  if (_locale.value.includes('zh')) {
+    return zhCn;
+  }
+  return en;
+})
 
 const searchPlatforms = ref<SearchPlatformItem[]>([]);
 const activeTab = ref<TabValue>(tabs[0].value);
@@ -32,13 +45,13 @@ const modelValue = computed({
 })
 
 const handleSetDefault = (item: SearchPlatformItem) => {
-  console.log(item, 'item')
+  // console.log(item, 'item')
   modelValue.value = item.value;
 }
 
 const sendMessage = (params: Record<string, any>) => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    console.log(tabs, 'tabs')
+    // console.log(tabs, 'tabs')
     const tab = tabs[0];
     if (tab.id) {
       chrome.tabs.sendMessage(tab.id, params);
@@ -51,6 +64,9 @@ const handleAddSearchPlatform = () => {
   sendMessage({
     action: 'add_search_platform',
   })
+  nextTick(() => {
+    window.close();
+  })
 }
 
 
@@ -58,6 +74,9 @@ const handleDeleteSearchPlatform = (item: SearchPlatformItem) => {
   sendMessage({
     action: 'delete_search_platform',
     item
+  })
+  nextTick(() => {
+    window.close();
   })
   // const newSearchPlatforms = searchPlatforms.value.filter(cur => cur.value !== item.value);
   // chrome.storage?.local.set({
@@ -71,7 +90,7 @@ const handleChangeTab = (item: TabItem) => {
 }
 
 const handleOpenURL = (url: string) => {
-  console.log(url, 'url')
+  // console.log(url, 'url')
   chrome.tabs.create({ url });
 }
 
@@ -86,53 +105,59 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-4 shadow-md rounded-md json-search-popup">
-    <div class="tabs-container border-stone-200">
-      <div class="border-stone-200" :class="{ 'active': activeTab === item.value }" v-for="item in tabs"
-        :key="item.value" @click="handleChangeTab(item)">
-        {{ item.label }}
+  <el-config-provider :locale="locale as unknown as Language">
+    <div class="p-4 shadow-md rounded-md json-search-popup">
+      <div class="tabs-container border-stone-200">
+        <div class="border-stone-200" :class="{ 'active': activeTab === item.value }" v-for="item in tabs"
+          :key="item.value" @click="handleChangeTab(item)">
+          {{ item.label }}
+        </div>
       </div>
-    </div>
-    <div class="text-stone-700 text-sm" v-if="activeTab === 'help'">
-      <div>使用方法: </div>
-      <ol class="pl-5.5 flex flex-col gap-2 text-sm m-0 mt-1.5">
-        <li>使用快捷键: ctrl+shift+空格(mac的是command+shift+空格)</li>
-        <li class="text-rose-500">注: 如果快捷键不可用, 请打开网址(<span
-            class="text-blue-500 hover:text-blue-400 cursor-pointer active:text-blue-700"
-            @click="handleOpenURL('chrome://extensions/shortcuts')">chrome://extensions/shortcuts</span>)进行自定义快捷键</li>
-        <li>必须先选择搜索引擎, 输入@进行选择</li>
-        <li>输入搜索关键词, 回车即可搜索(如果比选关键字用#前后用空格例如: 其他关键字 #测试 其他关键字)</li>
-      </ol>
-    </div>
-    <template v-if="activeTab === 'list'">
-      <div class="flex-1 flex flex-col overflow-hidden">
-        <ul class="list-none options-container flex-1 overflow-y-auto">
-          <li v-for="item in searchPlatforms" :key="`option-${item.value}`" :class="{
-            'active': modelValue === item.value
-          }">
-            <div class="flex items-center gap-2">
-              <img :src="item.icon" width="18" height="18" alt="" class="rounded-full" v-if="item.icon">
-              <span class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">{{ item.label }}</span>
-            </div>
-            <div class="flex gap-2">
-              <div class="text-xs text-indigo-500 active:text-indigo-700 no-select hover:text-indigo-300"
-                v-if="!item.isDefault" @click="handleSetDefault(item)">
-                设为默认
+      <div class="text-stone-700 text-sm" v-if="activeTab === 'help'">
+        <div>{{ $t('help.usage') }}: </div>
+        <ol class="pl-5.5 flex flex-col gap-2 text-sm m-0 mt-1.5">
+          <li>{{ $t('help.usage_content.first') }}</li>
+          <li class="text-rose-500">{{ $t('help.usage_content.secondBefore') }}<span
+              class="text-blue-500 hover:text-blue-400 cursor-pointer active:text-blue-700"
+              @click="handleOpenURL('chrome://extensions/shortcuts')">chrome://extensions/shortcuts</span>{{
+                $t('help.usage_content.secondAfter') }}</li>
+          <li>{{ $t('help.usage_content.third', { key: '@' }) }}</li>
+          <li>{{ $t('help.usage_content.four') }}</li>
+        </ol>
+      </div>
+      <template v-if="activeTab === 'list'">
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <ul class="list-none options-container flex-1 overflow-y-auto">
+            <li v-for="item in searchPlatforms" :key="`option-${item.value}`" :class="{
+              'active': modelValue === item.value
+            }">
+              <div class="flex items-center gap-2">
+                <img :src="item.icon" width="18" height="18" alt="" class="rounded-full" v-if="item.icon">
+                <span class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">{{ item.label }}</span>
               </div>
-              <div class="text-xs text-stone-500 no-select" v-else>默认</div>
-              <div class="text-xs text-rose-500 no-select cursor-pointer hover:text-rose-300 active:text-rose-700"
-                @click="handleDeleteSearchPlatform(item)">删除</div>
-            </div>
-          </li>
-        </ul>
-        <el-button type="primary" @click="handleAddSearchPlatform" class="w-full mt-2 flex-shrink-0">新增</el-button>
-      </div>
-    </template>
-    <template v-if="activeTab === 'settings'">
-      <!-- TODO: 快捷键设置 -->
-      <div class="text-stone-700 text-sm text-center mt-4">当前功能尚未开发</div>
-    </template>
-  </div>
+              <div class="flex gap-2">
+                <div
+                  class="text-xs text-indigo-500 active:text-indigo-700 no-select hover:text-indigo-300 whitespace-nowrap"
+                  v-if="!item.isDefault" @click="handleSetDefault(item)">
+                  {{ $t('button.setDefault') }}
+                </div>
+                <div class="text-xs text-stone-500 no-select" v-else>{{ $t('default') }}</div>
+                <div class="text-xs text-rose-500 no-select cursor-pointer hover:text-rose-300 active:text-rose-700"
+                  @click="handleDeleteSearchPlatform(item)">{{ $t('button.delete') }}</div>
+              </div>
+            </li>
+          </ul>
+          <el-button type="primary" @click="handleAddSearchPlatform" class="w-full mt-2 flex-shrink-0">{{
+            $t('button.add')
+            }}</el-button>
+        </div>
+      </template>
+      <template v-if="activeTab === 'settings'">
+        <!-- TODO: 快捷键设置 -->
+        <div class="text-stone-700 text-sm text-center mt-4">{{ $t('notDevYet') }}</div>
+      </template>
+    </div>
+  </el-config-provider>
 </template>
 
 <style scoped lang="scss">
@@ -142,6 +167,7 @@ onMounted(async () => {
   flex-direction: column;
   max-height: 560px;
   min-width: 240px;
+  width: fit-content;
 }
 
 .tabs-container {
@@ -190,6 +216,7 @@ onMounted(async () => {
     outline: none;
     margin-top: 4px;
     color: #1c1917;
+    gap: 20px;
 
     &:first-child {
       margin-top: 0;

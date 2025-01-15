@@ -1,6 +1,6 @@
 {
-  "name": "json-search",
-  "description": "manifest.json description",
+  "name": "Json Search",
+  "description": "A Custom Search Tool for chrome extension",
   "private": true,
   "version": "0.0.3",
   "type": "module",
@@ -22,7 +22,8 @@
     "jsonlee-promise": "^0.0.1",
     "lodash-es": "^4.17.21",
     "unocss": "^0.65.3",
-    "vue": "^3.5.12"
+    "vue": "^3.5.12",
+    "vue-i18n": "^11.0.1"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.6.0",

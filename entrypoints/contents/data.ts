@@ -1,14 +1,15 @@
 import type { SearchPlatformItem } from "../global/types/type";
+import i18n from "../global/locale";
 
 export const addSearchPlatform: SearchPlatformItem = {
-  label: '新增',
+  label: i18n.global.t('button.add'),
   value: 'add',
   url: '',
 }
 
 export const defaultSearchPlatforms = [
   {
-    label: '百度',
+    label: i18n.global.t('platforms.baidu'),
     value: 'baidu',
     url: 'https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&rsv_idx=1&tn=baidu&wd={keyword}',
     icon: 'https://www.baidu.com/favicon.ico'
@@ -59,6 +60,6 @@ export const defaultSearchPlatforms = [
 ];
 
 export const addSearchRules = {
-  label: [{ required: true, message: '请输入名称', trigger: 'blur' }],
-  url: [{ required: true, message: '请输入搜索地址', trigger: 'blur' }],
+  label: [{ required: true, message: i18n.global.t('addForm.placeholder.name'), trigger: 'blur' }],
+  url: [{ required: true, message: i18n.global.t('addForm.placeholder.url'), trigger: 'blur' }],
 };

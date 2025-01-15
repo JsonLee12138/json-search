@@ -11,4 +11,5 @@ html,body{
   border: 0;
   outline: 0;
   overflow: hidden;
+  width: fit-content;
 }

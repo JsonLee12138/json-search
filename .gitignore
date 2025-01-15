@@ -15,8 +15,9 @@ stats-*.json
 web-ext.config.ts
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+# .vscode/*
+# !.vscode/extensions.json
+# !.vscode/setting.json
 .idea
 .DS_Store
 *.suo
@@ -27,4 +28,3 @@ web-ext.config.ts
 
 auto-imports.d.ts
 components.d.ts
-.vscode

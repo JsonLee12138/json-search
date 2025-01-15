@@ -4,6 +4,7 @@ import './global/styles/theme.css';
 import 'uno.css';
 import type { PerBrowserOption } from 'wxt';
 import packageJson from '../package.json';
+import i18n from './global/locale';
 
 const devMatches: PerBrowserOption<string[]> = ['http://localhost:9527/*', 'https://www.baidu.com/*'] as const;
 const prodMatches: PerBrowserOption<string[]> = ['*://*/*'] as const;
@@ -20,6 +21,7 @@ export default defineContentScript({
     root.id = 'json-search-container';
     document.body.appendChild(root);
     const app = createApp(App);
+    app.use(i18n);
     app.mount(root);
   },
 });

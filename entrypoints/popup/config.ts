@@ -1,3 +1,5 @@
+import i18n from "../global/locale";
+
 export type TabValue = 'help' | 'list' | 'settings';
 export type TabItem = {
   label: string;
@@ -6,15 +8,15 @@ export type TabItem = {
 
 export const tabs: TabItem[] = [
   {
-    label: '帮助',
+    label: i18n.global.t('help.title'),
     value: 'help',
   },
   {
-    label: '列表',
+    label: i18n.global.t('searchList'),
     value: 'list',
   },
   {
-    label: '设置',
+    label: i18n.global.t('settings'),
     value: 'settings',
   },
 ]

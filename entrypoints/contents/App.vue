@@ -11,24 +11,14 @@ import { Language } from 'element-plus/lib/locale/index.js';
 import { storageInstance } from '../global/utils/storage';
 import { useSettings } from '../global/hooks/useSettings';
 import { StorageKey } from '../global/enum/storage';
-import { useDrag } from '../global/hooks/useDrag';
 import interact from 'interactjs';
 
 let isDrag = false;
 const edgeGap = 0;
-let startRect = {
-  x: 0,
-  y: 0,
-}
-let screenRect = {
-  width: 0,
-  height: 0,
-}
 const { t, locale: _locale } = useI18n();
 const { settings } = useSettings();
 const searchValue = ref('');
 const containerRef = ref<HTMLDivElement | null>(null);
-const initialPosition = ref({ x: 0, y: 0 });
 const showSearch = ref(false);
 const dialogFormVisible = ref(false);
 const formRef = ref<FormInstance | null>(null);
@@ -158,6 +148,9 @@ watch(() => showSearch.value, (newVal) => {
             containerRef.value!.setAttribute('data-y', y.toString());
             containerRef.value!.style.transform = `translate(${x}px, ${y}px)`;
           }
+          nextTick(()=> {
+            containerRef.value!.style.opacity = '1';
+          })
         })
         interact(containerRef.value).draggable({
           inertia: true,
@@ -282,7 +275,7 @@ onBeforeUnmount(() => {
 <template>
   <el-config-provider :locale="locale as unknown as Language">
     <div
-      class="fixed top-[20vh] left-0 top-0 p-3 shadow bg-white flex gap-2 rounded-md z-[1000] json-search-content-container"
+      class="fixed top-[20vh] left-0 top-0 p-3 shadow bg-white flex gap-2 rounded-md opacity-0 z-[1000] json-search-content-container"
       v-if="showSearch" ref="containerRef" v-click-outside="handleBlur">
       <Mention :options="searchPlatformOptions" icon default-key="isDefault" v-model="mentionValue"
         containerStyle="width: 320px" @enter="handleEnter" ref="mentionRef" @select="handleSelect" />

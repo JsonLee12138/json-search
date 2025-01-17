@@ -22,7 +22,7 @@
     <div class="input-main" contenteditable ref="inputRef" @input="handleInput"></div> -->
   </div>
   <!-- </div> -->
-  <div class="py-3 px-2 shadow fixed z-[1000] bg-white rounded-md" :style="optionContainerStyles" v-if="showOptions">
+  <div class="py-3 px-2 shadow fixed z-[1000] bg-white rounded-md" :style="optionContainerStyles" v-if="showOptions && optionsUse.length">
     <ul class="list-none options-container">
       <li v-for="item in optionsUse" :key="`option-${item.value}`" :class="{
         // 'active': modelValue?.prepend === item.value,

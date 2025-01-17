@@ -16,6 +16,7 @@ export type SelectOptionUse<T = DefaultSelectOption> = T & {
   label: string;
   value: string;
   icon?: string;
+  default?: boolean;
 }
 
 export type MentionRef = {

@@ -2,7 +2,7 @@
   "name": "Json Search",
   "description": "A Custom Search Tool for chrome extension",
   "private": true,
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -19,13 +19,16 @@
     "@floating-ui/vue": "^1.1.6",
     "@wxt-dev/unocss": "^1.0.0",
     "element-plus": "^2.9.2",
+    "interactjs": "^1.10.27",
     "jsonlee-promise": "^0.0.1",
     "lodash-es": "^4.17.21",
     "unocss": "^0.65.3",
     "vue": "^3.5.12",
+    "vue-hooks-plus": "^2.2.1",
     "vue-i18n": "^11.0.1"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.11",
     "@commitlint/config-conventional": "^19.6.0",
     "@types/chrome": "^0.0.280",
     "@types/lodash-es": "^4.17.12",

@@ -6,9 +6,13 @@ import { TabItem, tabs, TabValue } from './config';
 import { useI18n } from 'vue-i18n';
 import { Language } from 'element-plus/lib/locale/index.js';
 import { zhCn, en } from 'element-plus/es/locales.mjs';
+import { storageInstance } from '../global/utils/storage';
+import { StorageKey } from '../global/enum/storage';
+import { useSettings } from '../global/hooks/useSettings';
 
 
 const { locale: _locale } = useI18n();
+const { settings } = useSettings();
 
 const locale = computed(() => {
   if (_locale.value.includes('zh')) {
@@ -37,9 +41,7 @@ const modelValue = computed({
         };
       }
     })
-    chrome.storage?.local.set({
-      searchPlatforms: newSearchPlatforms,
-    })
+    storageInstance.setItem(StorageKey.SEARCH_PLATFORMS, newSearchPlatforms);
     searchPlatforms.value = newSearchPlatforms;
   },
 })
@@ -78,11 +80,6 @@ const handleDeleteSearchPlatform = (item: SearchPlatformItem) => {
   nextTick(() => {
     window.close();
   })
-  // const newSearchPlatforms = searchPlatforms.value.filter(cur => cur.value !== item.value);
-  // chrome.storage?.local.set({
-  //   searchPlatforms: newSearchPlatforms,
-  // })
-  // searchPlatforms.value = newSearchPlatforms;
 }
 
 const handleChangeTab = (item: TabItem) => {
@@ -149,12 +146,19 @@ onMounted(async () => {
           </ul>
           <el-button type="primary" @click="handleAddSearchPlatform" class="w-full mt-2 flex-shrink-0">{{
             $t('button.add')
-            }}</el-button>
+          }}</el-button>
         </div>
       </template>
       <template v-if="activeTab === 'settings'">
         <!-- TODO: 快捷键设置 -->
-        <div class="text-stone-700 text-sm text-center mt-4">{{ $t('notDevYet') }}</div>
+        <!-- <div class="text-stone-700 text-sm text-center mt-4">{{ $t('notDevYet') }}</div> -->
+        <ul class="list-none p-0">
+          <li class="flex gap-5 items-center justify-between  mx-2">
+            <label>{{ $t('settings.label.closeOnBlur') }}</label>
+            <el-switch v-model="settings.closeOnBlur" />
+
+          </li>
+        </ul>
       </template>
     </div>
   </el-config-provider>

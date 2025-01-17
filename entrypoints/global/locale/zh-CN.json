@@ -1,7 +1,6 @@
 {
   "searchList": "列表",
   "search": "搜索",
-  "settings": "设置",
   "platforms": {
     "baidu": "百度"
   },
@@ -55,5 +54,11 @@
   "deleteConfirm": {
     "content": "确定要删除当前搜索引擎吗?",
     "title": "警告"
+  },
+  "settings": {
+    "title": "设置",
+    "label": {
+      "closeOnBlur": "失去焦点时关闭"
+    }
   }
 }

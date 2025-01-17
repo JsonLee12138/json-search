@@ -63,3 +63,6 @@ If you encounter any issues or have suggestions for new features, feel free to:
 - Added right-click search on selected text.
 - Added a custom search engine feature.
 - Multi-language support
+- Automatically close when focus is lost (enabled by default)
+-	Use the tab key to select a search engine
+-	Support drag-and-drop to set the position of the search box

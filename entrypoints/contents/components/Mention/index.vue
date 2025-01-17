@@ -1,7 +1,7 @@
 <template>
   <div ref="containerRef" class="mention-container bg-stone-100" :style="containerStyle">
-    <el-input v-bind="inputProps" :placeholder="$t(inputProps.placeholder || '')" @input="handleInput" :model-value="modelValue?.value" ref="inputRef"
-      @keydown.enter="handleEnter">
+    <el-input v-bind="inputProps" :placeholder="$t(inputProps.placeholder || '')" @input="handleInput"
+      :model-value="localValue?.value" ref="inputRef" @keydown.enter="handleEnter">
       <template #prepend>
         <div class="cursor-pointer" @click="handleOpenOptions">
           <img v-if="icon && currentOption?.icon" :src="currentOption.icon" alt="" width="18" height="18"
@@ -51,11 +51,13 @@ const props = withDefaults(defineProps<{
   iconKey?: string,
   icon?: boolean
   containerStyle?: string | Record<string, string>,
-  inputProps?: InputProps
+  inputProps?: InputProps,
+  defaultKey?: string,
 }>(), {
   labelKey: 'label',
   valueKey: 'value',
   iconKey: 'icon',
+  defaultKey: 'default',
   inputProps: () => ({
     placeholder: 'placeholder.search',
     clearable: true,
@@ -95,16 +97,14 @@ const optionContainerStyles = computed(() => {
 })
 
 const optionsAll = computed<SelectOptionUse<T>[]>(() => {
+  debugger
   return props.options.map((item) => ({
     ...item,
     label: get(item, props.labelKey),
     value: get(item, props.valueKey),
     icon: get(item, props.iconKey),
+    default: get(item, props.defaultKey),
   }));
-});
-
-const currentOption = computed(() => {
-  return optionsAll.value.find(item => item.value === props.modelValue?.prepend);
 });
 
 const optionsUse = computed<SelectOptionUse<T>[]>(() => {
@@ -118,6 +118,27 @@ const optionsUse = computed<SelectOptionUse<T>[]>(() => {
   return optionsAll.value;
 });
 
+const localValue = computed({
+  get: () => {
+    if (!props.modelValue) {
+      if (!optionsAll.value.length) return new MentionValue({ prepend: undefined });
+      const _item_ = optionsAll.value.find(item => item.default) || optionsAll.value[0];
+      return new MentionValue({ prepend: _item_.value })
+    };
+    return props.modelValue;
+  },
+  set: (value: MentionValue) => {
+    emit('update:modelValue', {
+      ...props.modelValue,
+      ...(value || {}),
+    });
+  }
+})
+
+const currentOption = computed(() => {
+  return optionsAll.value.find(item => item.value === localValue.value.prepend);
+});
+
 const focusOption = computed(() => {
   return optionsUse.value[focusIndex.value];
 })
@@ -129,10 +150,11 @@ const bindOptionRefs = (value: string, el: Element | ComponentPublicInstance | n
 }
 
 const handleInput = (value: string) => {
-  emit('update:modelValue', {
-    ...props.modelValue,
-    value,
-  });
+  // emit('update:modelValue', {
+  //   ...props.modelValue,
+  //   value,
+  // });
+  localValue.value.value = value;
   const arr = value.split(' ');
   if (arr.length === 1 && value.startsWith('@')) {
     showOptions.value = true;
@@ -173,11 +195,17 @@ const handleEnter = (e: KeyboardEvent | Event) => {
 // }
 
 const handleSelect = (item: SelectOptionUse<T>) => {
-  emit('update:modelValue', {
-    ...props.modelValue,
+  // emit('update:modelValue', {
+  //   ...props.modelValue,
+  //   value: '',
+  //   prepend: item.value,
+  // });
+  localValue.value = new MentionValue({
     value: '',
     prepend: item.value,
-  });
+  })
+  // localValue.value.value = '';
+  // localValue.value.prepend = item.value;
   showOptions.value = false;
   emit('select', item.value, item);
   inputRef.value?.focus();
@@ -203,27 +231,6 @@ const prev = () => {
   }
 }
 
-watch(() => focusOption.value, (value) => {
-  nextTick(() => {
-    const el = optionRefs.value.get(value.value);
-    el?.scrollIntoView({
-      block: 'nearest',
-    });
-  })
-})
-
-watch([() => showOptions.value, () => optionsUse.value], ([show, options]) => {
-  if (show) {
-    const index = options.findIndex(item => item.value === props.modelValue?.prepend);
-    if (index > -1) {
-      focusIndex.value = index;
-    } else {
-      focusIndex.value = 0;
-    }
-  } else {
-    currentFocusIndex = 0;
-  }
-})
 const handleKeyDown = (e: KeyboardEvent) => {
   if (e.isComposing) return;
   if (!showOptions.value || !optionsUse.value.length) return;
@@ -248,6 +255,13 @@ const handleKeyDown = (e: KeyboardEvent) => {
         handleSelect(focusOption.value);
       }
       break;
+    case 'Tab':
+      if (showOptions.value) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleSelect(focusOption.value);
+      }
+      break;
     case 'Escape':
       if (showOptions.value) {
         e.preventDefault();
@@ -258,10 +272,39 @@ const handleKeyDown = (e: KeyboardEvent) => {
       break;
   }
 }
-onMounted(() => {
-  if (!props.modelValue?.prepend) {
-    emit('update:modelValue', { prepend: optionsUse.value[0].value });
+
+watch(() => focusOption.value, (value) => {
+  nextTick(() => {
+    const el = optionRefs.value.get(value.value);
+    el?.scrollIntoView({
+      block: 'nearest',
+    });
+  })
+})
+
+watch([() => showOptions.value, () => optionsUse.value], ([show, options]) => {
+  if (show) {
+    const index = options.findIndex(item => item.value === props.modelValue?.prepend);
+    if (index > -1) {
+      focusIndex.value = index;
+    } else {
+      focusIndex.value = 0;
+    }
+  } else {
+    currentFocusIndex = 0;
   }
+})
+// watch(() => props.modelValue, (value) => {
+//   if (!value?.prepend && optionsUse.value.length) {
+//     const _use = optionsUse.value.find(item => item.default) || optionsUse.value[0];
+//     emit('update:modelValue', { prepend: _use.value });
+//   }
+// })
+onMounted(() => {
+  // if (!props.modelValue?.prepend && optionsUse.value.length) {
+  //   const _use = optionsUse.value.find(item => item.default) || optionsUse.value[0];
+  //   emit('update:modelValue', { prepend: _use.value });
+  // }
   window.addEventListener('keydown', handleKeyDown, {
     capture: true
   })

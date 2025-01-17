@@ -16,7 +16,7 @@ export const tabs: TabItem[] = [
     value: 'list',
   },
   {
-    label: i18n.global.t('settings'),
+    label: i18n.global.t('settings.title'),
     value: 'settings',
   },
 ]

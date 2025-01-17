@@ -1,5 +1,7 @@
+import { StorageKey } from "../enum/storage";
 import { getLocale, parseLanguage } from "../locale";
 import type { SearchPlatformItem } from "../types/type";
+import { storageInstance } from "./storage";
 
 const locale = getLocale();
 
@@ -55,18 +57,16 @@ export const defaultSearchPlatforms = [
   }
 ];
 
-export const initSearchPlatforms = ()=> new Promise<SearchPlatformItem[]>((resolve, reject) => {
+export const initSearchPlatforms = () => new Promise<SearchPlatformItem[]>(async (resolve, reject) => {
   try {
-    chrome.storage?.local.get('searchPlatforms', (res) => {
-      if (!res || !res.searchPlatforms?.length) {
-        chrome.storage?.local.set({
-          searchPlatforms: [...defaultSearchPlatforms]
-        })
-        resolve([...defaultSearchPlatforms]);
-      } else {
-        resolve(res.searchPlatforms);
-      }
-    })
+    const res =
+      await storageInstance.getItem(StorageKey.SEARCH_PLATFORMS);
+    if (!res || !res?.length) {
+      storageInstance.setItem(StorageKey.SEARCH_PLATFORMS, [...defaultSearchPlatforms]);
+      resolve([...defaultSearchPlatforms]);
+    } else {
+      resolve(res);
+    }
   } catch (error) {
     reject(error);
   }

@@ -8,8 +8,27 @@ import 'element-plus/es/components/message-box/style/css'
 import { initSearchPlatforms } from '../global/utils/initSearchPlatforms';
 import { useI18n } from 'vue-i18n';
 import { Language } from 'element-plus/lib/locale/index.js';
-const { t, locale:_locale } = useI18n();
+import { storageInstance } from '../global/utils/storage';
+import { useSettings } from '../global/hooks/useSettings';
+import { StorageKey } from '../global/enum/storage';
+import { useDrag } from '../global/hooks/useDrag';
+import interact from 'interactjs';
+
+let isDrag = false;
+const edgeGap = 0;
+let startRect = {
+  x: 0,
+  y: 0,
+}
+let screenRect = {
+  width: 0,
+  height: 0,
+}
+const { t, locale: _locale } = useI18n();
+const { settings } = useSettings();
 const searchValue = ref('');
+const containerRef = ref<HTMLDivElement | null>(null);
+const initialPosition = ref({ x: 0, y: 0 });
 const showSearch = ref(false);
 const dialogFormVisible = ref(false);
 const formRef = ref<FormInstance | null>(null);
@@ -17,8 +36,8 @@ const searchPlatforms = ref<SearchPlatformItem[]>(defaultSearchPlatforms);
 const searchPlatformOptions = computed<SearchPlatformItem[]>(() => {
   return [...searchPlatforms.value, addSearchPlatform];
 })
-const locale = computed(()=> {
-  if(_locale.value.includes('zh')){
+const locale = computed(() => {
+  if (_locale.value.includes('zh')) {
     return 'zh-cn'
   }
   return 'en'
@@ -33,6 +52,21 @@ const formData = reactive<SearchPlatformItem>({
 });
 const mentionValue = ref<MentionValue>();
 const mentionRef = ref<MentionRef | null>(null);
+
+const setContainerPosition = (pos: { top: number, left: number }) => {
+  if (containerRef.value) {
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    const containerRect = containerRef.value?.getBoundingClientRect();
+    const maxLeft = Math.floor(screenWidth - containerRect.width - edgeGap);
+    const maxTop = Math.floor(screenHeight - containerRect.height - edgeGap);
+    const left = Math.max(edgeGap, Math.min(pos.left, maxLeft));
+    const top = Math.max(edgeGap, Math.min(pos.top, maxTop));
+    containerRef.value.style.top = `${left}px`;
+    containerRef.value.style.left = `${top}px`;
+  }
+}
+
 const handleEnter = () => {
   handleSearch();
 };
@@ -90,9 +124,7 @@ const handleAddSubmit = () => {
         icon: ''
       }
       searchPlatforms.value.push(item);
-      chrome.storage?.local.set({
-        searchPlatforms: [...searchPlatforms.value]
-      })
+      storageInstance.setItem(StorageKey.SEARCH_PLATFORMS, [...searchPlatforms.value]);
       dialogFormVisible.value = false;
     }
   })
@@ -108,6 +140,39 @@ watch(() => showSearch.value, (newVal) => {
   if (newVal) {
     nextTick(() => {
       mentionRef.value?.focus();
+      // 处理拖拽
+      if (containerRef.value) {
+        storageInstance.getItem(StorageKey.CONTENT_RECT).then((res) => {
+          if (!res) {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const containerRect = containerRef.value!.getBoundingClientRect();
+            const x = (screenWidth - containerRect.width) / 2;
+            const y = (screenHeight - containerRect.height) * 0.2;
+            containerRef.value!.style.transform = `translate(${x}px, ${y}px)`;
+            containerRef.value!.setAttribute('data-x', x.toString());
+            containerRef.value!.setAttribute('data-y', y.toString());
+          } else {
+            const { x, y } = res;
+            containerRef.value!.setAttribute('data-x', x.toString());
+            containerRef.value!.setAttribute('data-y', y.toString());
+            containerRef.value!.style.transform = `translate(${x}px, ${y}px)`;
+          }
+        })
+        interact(containerRef.value).draggable({
+          inertia: true,
+          listeners: {
+            start: () => {
+              isDrag = true;
+            },
+            move: handleDrag,
+            end: handleDragEnd
+          }
+        })
+      }
+      if (mentionValue.value?.prepend === 'add') {
+        mentionValue.value = undefined;
+      }
     })
   } else {
     searchValue.value = '';
@@ -125,9 +190,7 @@ const handleDeleteSearchPlatform = (item: SearchPlatformItem) => {
     }
   ).then(() => {
     const newSearchPlatforms = searchPlatforms.value.filter(cur => cur.value !== item.value);
-    chrome.storage?.local.set({
-      searchPlatforms: [...newSearchPlatforms]
-    })
+    storageInstance.setItem(StorageKey.SEARCH_PLATFORMS, [...newSearchPlatforms]);
     searchPlatforms.value = [...newSearchPlatforms];
   })
 }
@@ -146,6 +209,12 @@ const handleResetMentionValue = () => {
   }
 }
 
+const handleBlur = () => {
+  if (settings.value.closeOnBlur && !isDrag) {
+    showSearch.value = false;
+  }
+}
+
 const addOpenListener = () => {
   chrome.runtime.onMessage.addListener((message) => {
     if (message.action === 'open_search') {
@@ -158,37 +227,40 @@ const addOpenListener = () => {
       handleDeleteSearchPlatform(message.item);
     }
   });
-  // 页面层监听
-  // 为了性能请将这里代码写在 keydown 监听外, 下面主要监听内容写在监听内
-  // let isMac = false;
-  // // @ts-ignore
-  // if (navigator.userAgentData) {
-  //   // @ts-ignore
-  //   isMac = navigator.userAgentData.platform.toUpperCase().includes("MAC");
-  // } else {
-  //   isMac = navigator.platform.toUpperCase().includes("MAC");
-  // }
-  // 主要监听内容
-  // if (!e.isComposing && e.code === 'Space' && e.shiftKey) {
-  //   if (isMac && e.metaKey) {
-  //     showSearch.value = true;
-  //   } else if (!isMac && e.ctrlKey) {
-  //     showSearch.value = true;
-  //   }
-  // }
+}
+
+const handleDrag = (e: any) => {
+  const target = e.target;
+  if (!target) return;
+  // keep the dragged position in the data-x/data-y attributes
+  let x = (parseFloat(target.getAttribute('data-x')) || 0) + e.dx;
+  let y = (parseFloat(target.getAttribute('data-y')) || 0) + e.dy;
+  const rect = target.getBoundingClientRect();
+  const maxX = window.innerWidth - rect.width - edgeGap; // 右边界
+  const maxY = window.innerHeight - rect.height - edgeGap;
+  x = Math.max(edgeGap, Math.min(x, maxX)); // 限制水平范围
+  y = Math.max(edgeGap, Math.min(y, maxY));
+  target.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+  // update the posiion attributes
+  target.setAttribute('data-x', x)
+  target.setAttribute('data-y', y)
+}
+
+const handleDragEnd = (e: any) => {
+  const target = e.target;
+  if (!target) return;
+  const x = parseFloat(target.getAttribute('data-x') || '0');
+  const y = parseFloat(target.getAttribute('data-y') || '0');
+  storageInstance.setItem(StorageKey.CONTENT_RECT, {
+    x,
+    y
+  })
+  setTimeout(() => {
+    isDrag = false;
+  }, 100)
 }
 
 onMounted(() => {
-  // chrome.storage?.local.get('searchPlatforms', (res) => {
-  //   if (!res || !res.searchPlatforms?.length) {
-  //     chrome.storage?.local.set({
-  //       searchPlatforms: [...defaultSearchPlatforms]
-  //     })
-  //     searchPlatforms.value = [...defaultSearchPlatforms];
-  //   } else {
-  //     searchPlatforms.value = res.searchPlatforms;
-  //   }
-  // })
   initSearchPlatforms().then(res => {
     searchPlatforms.value = res;
     handleResetMentionValue();
@@ -209,102 +281,11 @@ onBeforeUnmount(() => {
 
 <template>
   <el-config-provider :locale="locale as unknown as Language">
-    <div class="fixed top-[20vh] left-[50%] translate-x-[-50%] p-3 shadow bg-white flex gap-2 rounded-md z-[1000]"
-      v-if="showSearch">
-      <Mention :options="searchPlatformOptions" icon v-model="mentionValue" containerStyle="width: 320px"
-        @enter="handleEnter" ref="mentionRef" @select="handleSelect" />
-      <!-- <el-mention v-model="searchValue" :options="searchPlatformOptions" style="width: 320px" placeholder="请输入"
-        @select="handleSelect" :filter-option="handleFilterOption" @keydown.enter="handleEnter" ref="inputRef"
-        :style="{ '--el-input-text-color': '#020617' }">
-      </el-mention> -->
-      <el-button type="primary" @click="handleSearch">{{ $t('search') }}</el-button>
-    </div>
-    <el-dialog v-model="dialogFormVisible" :title="$t('addForm.title')" width="500" :before-close="handleBeforeClose">
-      <el-form :model="formData" :rules="addSearchRules" label-position="top" @submit.prevent="handleAddSubmit"
-        ref="formRef">
-        <el-form-item :label="$t('addForm.label.name')" prop="label">
-          <el-input v-model="formData.label" autocomplete="off" :placeholder="$t('addForm.placeholder.name')" />
-        </el-form-item>
-        <el-form-item :label="$t('addForm.label.key')" prop="value">
-          <el-input v-model="formData.value" autocomplete="off" :placeholder="$t('addForm.placeholder.key')" />
-          <div class="text-xs text-stone-300 mt-1">{{ $t('addForm.desc.key') }}</div>
-        </el-form-item>
-        <el-form-item :label="$t('addForm.label.icon')" prop="icon">
-          <el-input v-model="formData.icon" autocomplete="off" :placeholder="$t('addForm.placeholder.icon')" />
-          <div class="text-xs text-stone-300 mt-1">{{ $t('addForm.desc.icon') }}</div>
-        </el-form-item>
-        <el-form-item :label="$t('addForm.label.url')" prop="url">
-          <el-input v-model="formData.url" autocomplete="off" :placeholder="$t('addForm.placeholder.url')" />
-          <div class="text-xs text-stone-300 mt-1 text-left list-outside list-disc">
-            <div class="indent-1 mb-2">{{ $t('addForm.desc.url.title') }}</div>
-            <ul class="pl-[2em]">
-              <li>{{ $t('addForm.desc.url.first', { keyword: '{keyword}' }) }}</li>
-              <li class="mt-1">{{ $t('addForm.desc.url.second', { keyword: '{keyword}' }) }}</li>
-            </ul>
-          </div>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="dialogFormVisible = false">{{ $t('button.cancel') }}</el-button>
-          <el-button type="primary" @click="handleAddSubmit">
-            {{ $t('button.confirm') }}
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
-    <div class="fixed top-[20vh] left-[50%] translate-x-[-50%] p-3 shadow bg-white flex gap-2 rounded-md z-[1000]"
-      v-if="showSearch">
-      <Mention :options="searchPlatformOptions" icon v-model="mentionValue" containerStyle="width: 320px"
-        @enter="handleEnter" ref="mentionRef" @select="handleSelect" />
-      <!-- <el-mention v-model="searchValue" :options="searchPlatformOptions" style="width: 320px" placeholder="请输入"
-        @select="handleSelect" :filter-option="handleFilterOption" @keydown.enter="handleEnter" ref="inputRef"
-        :style="{ '--el-input-text-color': '#020617' }">
-      </el-mention> -->
-      <el-button type="primary" @click="handleSearch">{{ $t('search') }}</el-button>
-    </div>
-    <el-dialog v-model="dialogFormVisible" :title="$t('addForm.title')" width="500" :before-close="handleBeforeClose">
-      <el-form :model="formData" :rules="addSearchRules" label-position="top" @submit.prevent="handleAddSubmit"
-        ref="formRef">
-        <el-form-item :label="$t('addForm.label.name')" prop="label">
-          <el-input v-model="formData.label" autocomplete="off" :placeholder="$t('addForm.placeholder.name')" />
-        </el-form-item>
-        <el-form-item :label="$t('addForm.label.key')" prop="value">
-          <el-input v-model="formData.value" autocomplete="off" :placeholder="$t('addForm.placeholder.key')" />
-          <div class="text-xs text-stone-300 mt-1">{{ $t('addForm.desc.key') }}</div>
-        </el-form-item>
-        <el-form-item :label="$t('addForm.label.icon')" prop="icon">
-          <el-input v-model="formData.icon" autocomplete="off" :placeholder="$t('addForm.placeholder.icon')" />
-          <div class="text-xs text-stone-300 mt-1">{{ $t('addForm.desc.icon') }}</div>
-        </el-form-item>
-        <el-form-item :label="$t('addForm.label.url')" prop="url">
-          <el-input v-model="formData.url" autocomplete="off" :placeholder="$t('addForm.placeholder.url')" />
-          <div class="text-xs text-stone-300 mt-1 text-left list-outside list-disc">
-            <div class="indent-1 mb-2">{{ $t('addForm.desc.url.title') }}</div>
-            <ul class="pl-[2em]">
-              <li>{{ $t('addForm.desc.url.first', { keyword: '{keyword}' }) }}</li>
-              <li class="mt-1">{{ $t('addForm.desc.url.second', { keyword: '{keyword}' }) }}</li>
-            </ul>
-          </div>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="dialogFormVisible = false">{{ $t('button.cancel') }}</el-button>
-          <el-button type="primary" @click="handleAddSubmit">
-            {{ $t('button.ok') }}
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
-    <div class="fixed top-[20vh] left-[50%] translate-x-[-50%] p-3 shadow bg-white flex gap-2 rounded-md z-[1000]"
-      v-if="showSearch">
-      <Mention :options="searchPlatformOptions" icon v-model="mentionValue" containerStyle="width: 320px"
-        @enter="handleEnter" ref="mentionRef" @select="handleSelect" />
-      <!-- <el-mention v-model="searchValue" :options="searchPlatformOptions" style="width: 320px" placeholder="请输入"
-        @select="handleSelect" :filter-option="handleFilterOption" @keydown.enter="handleEnter" ref="inputRef"
-        :style="{ '--el-input-text-color': '#020617' }">
-      </el-mention> -->
+    <div
+      class="fixed top-[20vh] left-0 top-0 p-3 shadow bg-white flex gap-2 rounded-md z-[1000] json-search-content-container"
+      v-if="showSearch" ref="containerRef" v-click-outside="handleBlur">
+      <Mention :options="searchPlatformOptions" icon default-key="isDefault" v-model="mentionValue"
+        containerStyle="width: 320px" @enter="handleEnter" ref="mentionRef" @select="handleSelect" />
       <el-button type="primary" @click="handleSearch">{{ $t('search') }}</el-button>
     </div>
     <el-dialog v-model="dialogFormVisible" :title="$t('addForm.title')" width="500" :before-close="handleBeforeClose">
@@ -344,8 +325,12 @@ onBeforeUnmount(() => {
   </el-config-provider>
 </template>
 
-<style scoped>
-:deep(.el-form-item--label-top .el-form-item__label) {
-  display: block;
+<style scoped lang="scss">
+.json-search-content-container {
+  cursor: grab;
+
+  :deep(.el-form-item--label-top .el-form-item__label) {
+    display: block;
+  }
 }
 </style>

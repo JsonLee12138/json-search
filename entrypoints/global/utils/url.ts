@@ -8,3 +8,8 @@ export const url2base64 = async (url: string) => {
     reader.readAsDataURL(blob);
 });
 }
+
+export const getBaseURL = (url: string) => {
+  const arr = url.split('?');
+  return arr[0];
+}

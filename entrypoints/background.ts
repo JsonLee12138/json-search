@@ -41,35 +41,6 @@ const changeTabs = async () => {
   } catch (error) {
     console.error(error)
   }
-  // chrome.storage?.local.get(StorageKey.SEARCH_PLATFORMS, ({ searchPlatforms }) => {
-  //   const noIcons: SearchPlatformItem[] = searchPlatforms.filter((item: SearchPlatformItem) => !item.icon && item.value !== 'add');
-  //   if (noIcons.length) {
-  //     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-  //       const tab = tabs[0];
-  //       if (tab) {
-  //         const url = new URL(tab.url || '');
-  //         const origin = url.origin;
-  //         if (noIcons.some(item => item.url.includes(origin))) {
-  //           let iconURL = tab.favIconUrl;
-  //           try {
-  //             iconURL = (await url2base64(tab.favIconUrl || '')) as string;
-  //           } catch (e) {
-  //             console.error('下载ico失败: ', e)
-  //           }
-  //           const newSearchPlatforms = searchPlatforms.map((item: SearchPlatformItem) => {
-  //             if (!item.icon && item.url.includes(origin)) {
-  //               return { ...item, icon: iconURL };
-  //             }
-  //             return item;
-  //           })
-  //           storageInstance.setItem(StorageKey.SEARCH_PLATFORMS, newSearchPlatforms);
-  //         }
-  //       }
-  //     })
-  //   } else {
-  //     return Promise.resolve();
-  //   }
-  // });
 }
 
 const iconsSetup = async () => {
@@ -99,7 +70,6 @@ const iconsSetup = async () => {
 
 const contextMenuSetup = async () => {
   const searchPlatforms = await initSearchPlatforms();
-  console.log(searchPlatforms, 'searchPlatforms')
   for (const item of searchPlatforms) {
     chrome.contextMenus.create({
       id: item.value,
@@ -110,7 +80,7 @@ const contextMenuSetup = async () => {
   }
   chrome.contextMenus.onClicked.addListener((info, tab) => {
     const clickItem = searchPlatforms.find(item => item.value === info.menuItemId);
-    if (clickItem) {
+    if (clickItem?.url) {
       chrome.tabs.create({
         url: clickItem.url.replace('{keyword}', info.selectionText ? encodeURIComponent(info.selectionText) : '')
       })
@@ -148,7 +118,16 @@ export default defineBackground(() => {
   let promise: AbortPromise | null = null;
   iconsSetup();
   chrome.runtime.onInstalled.addListener(async () => {
-    contextMenuSetup();
+    chrome.contextMenus.removeAll(()=> {
+      contextMenuSetup();
+    })
+  })
+  chrome.storage.onChanged.addListener((changes)=> {
+    if (changes.hasOwnProperty(StorageKey.SEARCH_PLATFORMS)) {
+      chrome.contextMenus.removeAll(()=> {
+        contextMenuSetup();
+      })
+    }
   })
 
   chrome.tabs.onActivated.addListener(() => {

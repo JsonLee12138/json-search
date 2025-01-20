@@ -7,7 +7,13 @@ export default defineConfig({
   extensionApi: 'chrome',
   modules: ['@wxt-dev/module-vue', '@wxt-dev/unocss'],
   manifest: {
-    permissions: ['storage', 'commands', 'contextMenus'],
+    permissions: [
+      'storage',
+      'commands',
+      'contextMenus',
+      "tabs",
+      "scripting"
+    ],
     commands: {
       'open-search': {
         suggested_key: {

@@ -7,7 +7,7 @@ import packageJson from '../package.json';
 import i18n from './global/locale';
 import { vClickOutside } from './global/directive/clickOutside';
 
-const devMatches: PerBrowserOption<string[]> = ['http://localhost:9527/*', 'https://www.baidu.com/*', 'http://www.google.com/*'] as const;
+const devMatches: PerBrowserOption<string[]> = ['http://localhost/*', 'https://www.baidu.com/*', 'http://www.google.com/*'] as const;
 const prodMatches: PerBrowserOption<string[]> = ['*://*/*'] as const;
 const __DEV__ = import.meta.env.MODE === 'development' as const;
 const matches = __DEV__ ? devMatches : prodMatches;

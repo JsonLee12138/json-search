@@ -5,8 +5,7 @@ import { initSearchPlatforms } from "./global/utils/initSearchPlatforms";
 import { storageInstance } from "./global/utils/storage";
 import { StorageKey } from "./global/enum/storage";
 
-
-
+const __DEV__ = import.meta.env.MODE === 'development' as const;
 
 const changeTabs = async () => {
   try {
@@ -76,10 +75,17 @@ const contextMenuSetup = async () => {
       title: item.label,
       type: 'normal',
       contexts: ['selection']
+    }, ()=> {
+      if(__DEV__){
+        console.log('create context menu: ', item)
+      }
     })
   }
   chrome.contextMenus.onClicked.addListener((info, tab) => {
     const clickItem = searchPlatforms.find(item => item.value === info.menuItemId);
+    if (__DEV__) {
+      console.log('click context menu: ', clickItem)
+    }
     if (clickItem?.url) {
       chrome.tabs.create({
         url: clickItem.url.replace('{keyword}', info.selectionText ? encodeURIComponent(info.selectionText) : '')

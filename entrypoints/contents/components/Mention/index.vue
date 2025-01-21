@@ -97,7 +97,6 @@ const optionContainerStyles = computed(() => {
 })
 
 const optionsAll = computed<SelectOptionUse<T>[]>(() => {
-  debugger
   return props.options.map((item) => ({
     ...item,
     label: get(item, props.labelKey),

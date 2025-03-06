@@ -68,30 +68,34 @@ const iconsSetup = async () => {
 }
 
 const contextMenuSetup = async () => {
-  const searchPlatforms = await initSearchPlatforms();
-  for (const item of searchPlatforms) {
-    chrome.contextMenus.create({
-      id: item.value,
-      title: item.label,
-      type: 'normal',
-      contexts: ['selection']
-    }, ()=> {
-      if(__DEV__){
-        console.log('create context menu: ', item)
-      }
-    })
-  }
-  chrome.contextMenus.onClicked.addListener((info, tab) => {
-    const clickItem = searchPlatforms.find(item => item.value === info.menuItemId);
-    if (__DEV__) {
-      console.log('click context menu: ', clickItem)
-    }
-    if (clickItem?.url) {
-      chrome.tabs.create({
-        url: clickItem.url.replace('{keyword}', info.selectionText ? encodeURIComponent(info.selectionText) : '')
+  try {
+    const searchPlatforms = await initSearchPlatforms();
+    for (const item of searchPlatforms) {
+      chrome.contextMenus.create({
+        id: item.value,
+        title: item.label,
+        type: 'normal',
+        contexts: ['selection']
+      }, () => {
+        if (__DEV__) {
+          console.log('create context menu: ', item)
+        }
       })
     }
-  })
+    chrome.contextMenus.onClicked.addListener((info, tab) => {
+      const clickItem = searchPlatforms.find(item => item.value === info.menuItemId);
+      if (__DEV__) {
+        console.log('click context menu: ', clickItem)
+      }
+      if (clickItem?.url) {
+        chrome.tabs.create({
+          url: clickItem.url.replace('{keyword}', info.selectionText ? encodeURIComponent(info.selectionText) : '')
+        })
+      }
+    })
+  } catch (error) {
+    console.error('contextMenuSetup error: ', error)
+  }
 }
 
 const getUseSearchPlatform = async () => {
@@ -124,13 +128,13 @@ export default defineBackground(() => {
   let promise: AbortPromise | null = null;
   iconsSetup();
   chrome.runtime.onInstalled.addListener(async () => {
-    chrome.contextMenus.removeAll(()=> {
+    chrome.contextMenus.removeAll(() => {
       contextMenuSetup();
     })
   })
-  chrome.storage.onChanged.addListener((changes)=> {
+  chrome.storage.onChanged.addListener((changes) => {
     if (changes.hasOwnProperty(StorageKey.SEARCH_PLATFORMS)) {
-      chrome.contextMenus.removeAll(()=> {
+      chrome.contextMenus.removeAll(() => {
         contextMenuSetup();
       })
     }

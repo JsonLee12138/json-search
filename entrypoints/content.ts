@@ -7,13 +7,16 @@ import packageJson from '../package.json';
 import i18n from './global/locale';
 import { vClickOutside } from './global/directive/clickOutside';
 
-const devMatches: PerBrowserOption<string[]> = ['http://localhost/*', 'https://www.baidu.com/*', 'http://www.google.com/*'] as const;
+const devMatches: PerBrowserOption<string[]> = ['http://localhost/*', 'https://www.baidu.com/*', 'http://www.google.com/*', 'https://developers.weixin.qq.com/*'] as const;
 const prodMatches: PerBrowserOption<string[]> = ['*://*/*'] as const;
 const __DEV__ = import.meta.env.MODE === 'development' as const;
 const matches = __DEV__ ? devMatches : prodMatches;
 
+const excludeMatches: PerBrowserOption<string[]> = ['https://developers.weixin.qq.com/*'] as const;
+
 export default defineContentScript({
   matches,
+  excludeMatches,
   main() {
     // 欢迎词
     console.log(`Welcome to Json Search, current env mode is ${import.meta.env.MODE}, current version is ${packageJson.version}`);

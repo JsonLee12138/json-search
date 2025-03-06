@@ -12,6 +12,7 @@ import { storageInstance } from '../global/utils/storage';
 import { useSettings } from '../global/hooks/useSettings';
 import { StorageKey } from '../global/enum/storage';
 import interact from 'interactjs';
+import { zhCn, en } from 'element-plus/es/locales.mjs';
 
 let isDrag = false;
 const edgeGap = 0;
@@ -26,11 +27,11 @@ const searchPlatforms = ref<SearchPlatformItem[]>(defaultSearchPlatforms);
 const searchPlatformOptions = computed<SearchPlatformItem[]>(() => {
   return [...searchPlatforms.value, addSearchPlatform];
 })
-const locale = computed(() => {
+const locale = computed<Language>(() => {
   if (_locale.value.includes('zh')) {
-    return 'zh-cn'
+    return zhCn
   }
-  return 'en'
+  return en
 })
 const formData = reactive<SearchPlatformItem>({
   label: '',
@@ -273,7 +274,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <el-config-provider :locale="locale as unknown as Language">
+  <el-config-provider :locale="locale">
     <div
       class="fixed top-[20vh] left-0 top-0 p-3 shadow bg-white flex gap-2 rounded-md opacity-0 z-[1000] json-search-content-container"
       v-if="showSearch" ref="containerRef" v-click-outside="handleBlur">

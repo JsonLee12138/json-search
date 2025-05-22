@@ -173,6 +173,13 @@ watch(() => showSearch.value, (newVal) => {
   }
 })
 
+watch(()=> dialogFormVisible.value, (newVal) => {
+  if(newVal){
+    showSearch.value = false;
+  }
+})
+
+const { appContext } = getCurrentInstance()!;
 const handleDeleteSearchPlatform = (item: SearchPlatformItem) => {
   ElMessageBox.confirm(
     t('deleteConfirm.content'),
@@ -181,7 +188,8 @@ const handleDeleteSearchPlatform = (item: SearchPlatformItem) => {
       confirmButtonText: t('button.ok'),
       cancelButtonText: t('button.cancel'),
       type: 'warning',
-    }
+      appendTo: appContext.app._container
+    },
   ).then(() => {
     const newSearchPlatforms = searchPlatforms.value.filter(cur => cur.value !== item.value);
     storageInstance.setItem(StorageKey.SEARCH_PLATFORMS, [...newSearchPlatforms]);
@@ -322,9 +330,8 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 .json-search-content-container {
   cursor: grab;
-
-  :deep(.el-form-item--label-top .el-form-item__label) {
-    display: block;
-  }
+}
+:deep(.el-form-item--label-top .el-form-item__label) {
+  display: block;
 }
 </style>

@@ -17,16 +17,30 @@ const excludeMatches: PerBrowserOption<string[]> = ['https://developers.weixin.q
 export default defineContentScript({
   matches,
   excludeMatches,
-  main() {
+  cssInjectionMode: 'ui',
+  async main(ctx) {
     // 欢迎词
     console.log(`Welcome to Json Search, current env mode is ${import.meta.env.MODE}, current version is ${packageJson.version}`);
 
-    const root = document.createElement('div');
-    root.className = 'json-search-root';
-    document.body.appendChild(root);
-    const app = createApp(App);
-    app.use(i18n);
-    app.directive('click-outside', vClickOutside)
-    app.mount(root);
+    const ui = await createShadowRootUi(ctx, {
+      name: 'json-search-ui',
+      position: 'inline',
+      anchor: 'body',
+      onMount: (container) => {
+        // Define how your UI will be mounted inside the container
+        const app = createApp(App);
+        app.use(i18n);
+        app.directive('click-outside', vClickOutside)
+        container.classList.add('json-search-root');
+        app.mount(container);
+        return app;
+      },
+      onRemove: (app) => {
+        // Unmount the app when the UI is removed
+        app?.unmount();
+      },
+    });
+
+    ui.mount();
   },
 });

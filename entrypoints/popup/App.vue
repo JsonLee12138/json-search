@@ -144,9 +144,9 @@ onMounted(async () => {
               </div>
             </li>
           </ul>
-          <el-button type="primary" @click="handleAddSearchPlatform" class="w-full mt-2 flex-shrink-0">{{
-            $t('button.add')
-          }}</el-button>
+          <el-button type="primary" @click="handleAddSearchPlatform" class="w-full mt-2 flex-shrink-0">
+            {{ $t('button.add') }}
+          </el-button>
         </div>
       </template>
       <template v-if="activeTab === 'settings'">

@@ -2,7 +2,7 @@
   "name": "Json Search",
   "description": "A Custom Search Tool for chrome extension",
   "private": true,
-  "version": "0.0.7",
+  "version": "0.0.8",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -19,6 +19,7 @@
     "@element-plus/icons-vue": "^2.3.1",
     "@floating-ui/vue": "^1.1.6",
     "@wxt-dev/unocss": "^1.0.0",
+    "chatarea": "^5.8.4",
     "element-plus": "^2.9.2",
     "interactjs": "^1.10.27",
     "jsonlee-promise": "^0.0.1",
@@ -29,12 +30,16 @@
     "vue-i18n": "^11.0.1"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^5.2.1",
     "@changesets/cli": "^2.27.11",
     "@commitlint/config-conventional": "^19.6.0",
     "@types/chrome": "^0.0.280",
     "@types/lodash-es": "^4.17.12",
+    "@unocss/eslint-plugin": "^66.4.2",
     "@wxt-dev/module-vue": "^1.0.1",
     "cz-git": "^1.11.0",
+    "eslint": "^9.33.0",
+    "eslint-plugin-format": "^1.0.1",
     "sass-embedded": "^1.83.1",
     "typescript": "5.6.3",
     "unplugin-auto-import": "^19.0.0",

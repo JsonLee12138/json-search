@@ -1,7 +1,7 @@
+import AutoImport from 'unplugin-auto-import/vite';
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
+import Components from 'unplugin-vue-components/vite';
 import { defineConfig } from 'wxt';
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   extensionApi: 'chrome',
@@ -11,8 +11,8 @@ export default defineConfig({
       'storage',
       'commands',
       'contextMenus',
-      "tabs",
-      "scripting"
+      'tabs',
+      'scripting',
     ],
     commands: {
       'open-search': {
@@ -20,12 +20,12 @@ export default defineConfig({
           default: 'Ctrl+Shift+Space',
           mac: 'Command+Shift+Space',
         },
-        description: 'Open Search Bar'
-      }
+        description: 'Open Search Bar',
+      },
     },
-    "host_permissions": [
-      "*://*/*"
-    ]
+    host_permissions: [
+      '*://*/*',
+    ],
   },
   vite: () => ({
     plugins: [
@@ -36,5 +36,5 @@ export default defineConfig({
         resolvers: [ElementPlusResolver()],
       }),
     ],
-  })
+  }),
 });

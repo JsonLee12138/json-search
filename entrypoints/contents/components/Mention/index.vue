@@ -1,6 +1,18 @@
 <template>
   <div ref="containerRef" class="mention-container bg-stone-100" :style="containerStyle">
-    <el-input v-bind="inputProps" :placeholder="$t(inputProps.placeholder || '')" @input="handleInput"
+    <div class="flex items-center rounded-md">
+      <!-- prepend -->
+      <div class="cursor-pointer flex-shrink-0 h-[32px] w-[42px] flex items-center justify-center prepend-container"
+        @click="handleOpenOptions">
+        <img v-if="icon && currentOption?.icon" :src="currentOption.icon" alt="" width="20" height="20"
+          class="rounded inline align-middle">
+        <span v-else>{{ currentOption?.label }}</span>
+      </div>
+      <!-- input -->
+      <div ref="chatAreaRef"
+        class="text-start w-full h-[32px] overflow-y-auto items-center bg-[#F5F5F4] text-[14px] input-container rounded-sm bg-white"></div>
+    </div>
+    <!-- <el-input v-bind="inputProps" :placeholder="$t(inputProps.placeholder || '')" @input="handleInput"
       :model-value="localValue?.value" ref="inputRef" @keydown.enter="handleEnter">
       <template #prepend>
         <div class="cursor-pointer" @click="handleOpenOptions">
@@ -9,7 +21,7 @@
           <span v-else>{{ currentOption?.label }}</span>
         </div>
       </template>
-    </el-input>
+    </el-input> -->
     <!-- TODO: 后期扩展 tag 处理 -->
     <!-- <div class="w-full h-[40px] flex input-container"> -->
     <!-- <div class="prepend">
@@ -22,7 +34,8 @@
     <div class="input-main" contenteditable ref="inputRef" @input="handleInput"></div> -->
   </div>
   <!-- </div> -->
-  <div class="py-3 px-2 shadow fixed z-[1000] bg-white rounded-md" :style="optionContainerStyles" v-if="showOptions && optionsUse.length">
+  <div class="py-3 px-2 shadow fixed z-[1000] bg-white rounded-md" :style="optionContainerStyles"
+    v-if="showOptions && optionsUse.length">
     <ul class="list-none options-container">
       <li v-for="item in optionsUse" :key="`option-${item.value}`" :class="{
         // 'active': modelValue?.prepend === item.value,
@@ -40,9 +53,9 @@
 import { get } from 'lodash-es';
 import { type DefaultSelectOption, MentionRef, MentionValue, type SelectOptionUse } from './type';
 import { ElInput, InputProps } from 'element-plus';
-import { useI18n } from 'vue-i18n';
+import ChatArea, { ChatNode, ChatOperateNode } from "chatarea";
+import 'chatarea/lib/ChatArea.css'
 
-const { t } = useI18n();
 const props = withDefaults(defineProps<{
   options: T[]
   modelValue?: MentionValue,
@@ -63,6 +76,52 @@ const props = withDefaults(defineProps<{
     clearable: true,
   } as unknown as InputProps),
 });
+
+const chatAreaRef = ref<HTMLDivElement>();
+let chat: ChatArea | null = null
+let opNode: ChatOperateNode | null = null
+
+const initChat = () => {
+  chat = new ChatArea({
+    elm: chatAreaRef.value!,
+    placeholder: '请输入文本',
+    needDialog: false,
+    needCallSpace: true
+  })
+  opNode = chat.createOperateNode()
+
+  // 此处可写入你的搜索引擎切换
+  chat.addEventListener('showAtDialog', () => {
+    // alert('弹出引擎切换页面')
+    handleOpenOptions();
+  })
+
+  chat.richText.addEventListener('keydown', (event: KeyboardEvent) => {
+    event.stopImmediatePropagation();
+  })
+  // 监听键盘按下事件
+  chat.richText.addEventListener('keyup', (event: KeyboardEvent) => {
+    event.stopImmediatePropagation();
+    if (event.code !== 'Space') return
+    // 获取当前输入区域的内容
+    const chatNode = opNode?.getCursorNode()
+    const node = chatNode?.node as ChatNode<'gridInput'>
+    // 识别文本中是否含有#标签
+    const matchEndIndex = node.text?.lastIndexOf('#')
+    if (matchEndIndex === -1) return
+    // 阻止本次空格敲击
+    event.preventDefault()
+    const preText = node.text?.slice(0, matchEndIndex)
+    const nextText = node.text?.slice(matchEndIndex! + 1)
+    node.text = preText
+    opNode?.updateNode(node)
+    chat?.setCustomTag({
+      id: String(new Date().getTime()),
+      name: nextText!
+    }, '#')
+  })
+}
+
 /**
  * TODO: 需要修改键盘选择功能
  * 1. 需要更改refs绑定和清理无效ref
@@ -193,6 +252,11 @@ const handleEnter = (e: KeyboardEvent | Event) => {
 //   })
 // }
 
+const handleFocus = () => {
+  // inputRef.value?.focus();
+  chat?.richText.focus();
+}
+
 const handleSelect = (item: SelectOptionUse<T>) => {
   // emit('update:modelValue', {
   //   ...props.modelValue,
@@ -207,7 +271,7 @@ const handleSelect = (item: SelectOptionUse<T>) => {
   // localValue.value.prepend = item.value;
   showOptions.value = false;
   emit('select', item.value, item);
-  inputRef.value?.focus();
+  handleFocus();
 }
 
 const handleOpenOptions = () => {
@@ -266,7 +330,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
         e.preventDefault();
         e.stopPropagation();
         showOptions.value = false;
-        inputRef.value?.focus();
+        handleFocus();
       }
       break;
   }
@@ -304,6 +368,7 @@ onMounted(() => {
   //   const _use = optionsUse.value.find(item => item.default) || optionsUse.value[0];
   //   emit('update:modelValue', { prepend: _use.value });
   // }
+  initChat()
   window.addEventListener('keydown', handleKeyDown, {
     capture: true
   })
@@ -312,11 +377,13 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeyDown, {
     capture: true
   });
+  chat && chat.dispose()
+  chat = null
 })
 
 defineExpose<MentionRef>({
   focus: () => {
-    inputRef.value?.focus();
+    handleFocus();
   }
 })
 </script>
@@ -325,13 +392,14 @@ defineExpose<MentionRef>({
 .mention-container {
   min-width: 200px;
 
-  // TODO: 后期扩展 tag 处理
-  // height: 40px;
-  // display: flex;
-  // align-items: center;
-  // border-radius: 4px;
-  // padding: 0 12px;
-  // box-sizing: border-box;
+  --el-input-border-color: #dcdfe6;
+  --el-input-hover-border-color: #c0c4cc;
+  --el-input-active-border-color: #6366f1;
+  .prepend-container {
+    box-shadow: 1px 0 0 0 var(--el-input-border-color) inset, 0 1px 0 0 var(--el-input-border-color) inset, 0 -1px 0 0 var(--el-input-border-color) inset;
+    background-color: #f5f7fa;
+  }
+
   .prepend {
     flex-shrink: 0;
     margin-right: 8px;
@@ -351,9 +419,38 @@ defineExpose<MentionRef>({
   }
 
   .input-container {
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-
+    box-shadow: 0 0 0 1px var(--el-input-border-color) inset;
+    &:hover {
+      box-shadow: 0 0 0 1px var(--el-input-hover-border-color) inset;
+    }
+    &:focus-within {
+      box-shadow: 0 0 0 1px var(--el-input-active-border-color) inset;
+    }
+    --padding-x: 10px;
+    :deep(.chat-rich-text){
+      height: 100%;
+      padding: 0 var(--padding-x) 0;
+      display: flex;
+      align-items: center;
+      font-size: inherit;
+      font-style: inherit;
+      color: #333;
+      .chat-grid-wrap{
+        flex: 1;
+      }
+    }
+    :deep(.chat-placeholder-wrap){
+      font-size: inherit;
+      font-style: inherit;
+      padding: 0 var(--padding-x) 0;
+      height: 100%;
+      display: flex !important;
+      color: oklch(70.4% 0.04 256.788);
+      align-items: center;
+    }
+    :deep(.chat-view-hidden){
+      display: none !important;
+    }
   }
 
   :deep(.el-input-group__prepend) {

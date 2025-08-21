@@ -67,6 +67,8 @@ const iconsSetup = async () => {
   }
 }
 
+let contextMenuClickListener: ((info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) => void) | null = null;
+
 const contextMenuSetup = async () => {
   try {
     const searchPlatforms = await initSearchPlatforms();
@@ -82,17 +84,22 @@ const contextMenuSetup = async () => {
         }
       })
     }
-    chrome.contextMenus.onClicked.addListener((info, tab) => {
+    console.log('contextMenuSetup', chrome.contextMenus);
+    if(contextMenuClickListener){
+      chrome.contextMenus.onClicked.removeListener(contextMenuClickListener);
+    }
+    contextMenuClickListener = (info, tab) => {
       const clickItem = searchPlatforms.find(item => item.value === info.menuItemId);
-      if (__DEV__) {
-        console.log('click context menu: ', clickItem)
+      if (__DEV__ || true) {
+        console.log('click context menu: ', clickItem, tab)
       }
       if (clickItem?.url) {
         chrome.tabs.create({
           url: clickItem.url.replace('{keyword}', info.selectionText ? encodeURIComponent(info.selectionText) : '')
         })
       }
-    })
+    }
+    chrome.contextMenus.onClicked.addListener(contextMenuClickListener);
   } catch (error) {
     console.error('contextMenuSetup error: ', error)
   }
@@ -110,19 +117,19 @@ const getUseSearchPlatform = async () => {
   return current;
 }
 
-const isNewTab = (tab: chrome.tabs.Tab) => {
-  return tab.pendingUrl === 'chrome://newtab/' || !tab.url;
-}
-const onCreatedHandler = async (tab: chrome.tabs.Tab) => {
-  if (isNewTab(tab) && true) {
-    const searchPlatform = await getUseSearchPlatform();
-    if (searchPlatform) {
-      chrome.tabs.update(tab.id!, {
-        url: getBaseURL(searchPlatform.url)
-      })
-    }
-  }
-}
+// const isNewTab = (tab: chrome.tabs.Tab) => {
+//   return tab.pendingUrl === 'chrome://newtab/' || !tab.url;
+// }
+// const onCreatedHandler = async (tab: chrome.tabs.Tab) => {
+//   if (isNewTab(tab) && true) {
+//     const searchPlatform = await getUseSearchPlatform();
+//     if (searchPlatform) {
+//       chrome.tabs.update(tab.id!, {
+//         url: getBaseURL(searchPlatform.url)
+//       })
+//     }
+//   }
+// }
 
 export default defineBackground(() => {
   let promise: AbortPromise | null = null;
@@ -147,7 +154,7 @@ export default defineBackground(() => {
     const controller = new AbortController();
     promise = abortPromise(changeTabs, controller);
   })
-  // chrome.tabs.onCreated.addListener(onCreatedHandler)
+
   chrome.commands.onCommand.addListener((command) => {
     if (command === 'open-search') {
       chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {

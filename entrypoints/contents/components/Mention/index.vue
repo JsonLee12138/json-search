@@ -1,16 +1,15 @@
 <template>
   <div ref="containerRef" class="mention-container bg-stone-100" :style="containerStyle">
-    <div class="flex items-center rounded-md">
-      <!-- prepend -->
+    <div class="flex items-center rounded-[4px] overflow-hidden">
       <div class="cursor-pointer flex-shrink-0 h-[32px] w-[42px] flex items-center justify-center prepend-container"
         @click="handleOpenOptions">
         <img v-if="icon && currentOption?.icon" :src="currentOption.icon" alt="" width="20" height="20"
-          class="rounded inline align-middle">
+          class="rounded-[4px] inline align-middle">
         <span v-else>{{ currentOption?.label }}</span>
       </div>
-      <!-- input -->
       <div ref="chatAreaRef"
-        class="text-start w-full h-[32px] overflow-y-auto items-center bg-[#F5F5F4] text-[14px] input-container rounded-sm bg-white"></div>
+        class="text-start w-full h-[32px] overflow-y-auto items-center bg-[#F5F5F4] text-[14px] input-container bg-white">
+      </div>
     </div>
     <!-- <el-input v-bind="inputProps" :placeholder="$t(inputProps.placeholder || '')" @input="handleInput"
       :model-value="localValue?.value" ref="inputRef" @keydown.enter="handleEnter">
@@ -21,7 +20,7 @@
           <span v-else>{{ currentOption?.label }}</span>
         </div>
       </template>
-    </el-input> -->
+</el-input> -->
     <!-- TODO: 后期扩展 tag 处理 -->
     <!-- <div class="w-full h-[40px] flex input-container"> -->
     <!-- <div class="prepend">
@@ -34,7 +33,7 @@
     <div class="input-main" contenteditable ref="inputRef" @input="handleInput"></div> -->
   </div>
   <!-- </div> -->
-  <div class="py-3 px-2 shadow fixed z-[1000] bg-white rounded-md" :style="optionContainerStyles"
+  <div class="py-3 px-2 shadow fixed z-[1000] bg-white rounded-[6px]" :style="optionContainerStyles"
     v-if="showOptions && optionsUse.length">
     <ul class="list-none options-container">
       <li v-for="item in optionsUse" :key="`option-${item.value}`" :class="{
@@ -91,18 +90,62 @@ const initChat = () => {
   opNode = chat.createOperateNode()
 
   // 此处可写入你的搜索引擎切换
-  chat.addEventListener('showAtDialog', () => {
-    // alert('弹出引擎切换页面')
-    handleOpenOptions();
+  // chat.addEventListener('showAtDialog', () => {
+  //   // alert('弹出引擎切换页面')
+  //   console.log('showAtDialog');
+  //   handleOpenOptions();
+  // })
+  chat.richText.addEventListener('input', (event: Event) => {
+    setTimeout(() => {
+      const value = chat?.getText();
+      localValue.value.value = value?.trim() ?? '';
+    }, 100)
   })
 
   chat.richText.addEventListener('keydown', (event: KeyboardEvent) => {
     event.stopImmediatePropagation();
+    if (event.code === 'Enter') {
+      handleEnter(event);
+    }
+    if (event.key === 'Backspace') {
+      const v = chat?.getText();
+      if (v?.at(-1) === '@') {
+        showOptions.value = false;
+      }
+    }
+    if(event.key === 'Escape'){
+      if(showOptions.value){
+        showOptions.value = false;
+      }else{
+        emit('esc')
+      }
+    }
   })
   // 监听键盘按下事件
   chat.richText.addEventListener('keyup', (event: KeyboardEvent) => {
     event.stopImmediatePropagation();
+    if (event.key === '@' || (event.code === 'Digit2' && event.shiftKey)) {
+      event.preventDefault();
+      event.stopPropagation();
+      handleOpenOptions();
+      return;
+    }
+    requestAnimationFrame(() => {
+      if (event.key === 'Backspace') {
+        const v = chat?.getText();
+        const arr = v?.split('@').filter(Boolean);
+        if (arr?.length) {
+          const last = arr?.pop();
+          if (!last?.includes(' ') && !showOptions.value) {
+            showOptions.value = true;
+          }
+        }
+      }
+    })
     if (event.code !== 'Space') return
+    if (showOptions.value) {
+      showOptions.value = false;
+    }
     // 获取当前输入区域的内容
     const chatNode = opNode?.getCursorNode()
     const node = chatNode?.node as ChatNode<'gridInput'>
@@ -112,9 +155,13 @@ const initChat = () => {
     // 阻止本次空格敲击
     event.preventDefault()
     const preText = node.text?.slice(0, matchEndIndex)
-    const nextText = node.text?.slice(matchEndIndex! + 1)
-    node.text = preText
+    const nextText = node.text?.slice(matchEndIndex! + 1).trim()
+    if (!nextText?.length) return;
+    node.text = preText; // 默认在开头加空格
     opNode?.updateNode(node)
+    if (preText?.length) {
+      chat?.insertText(' ');
+    }
     chat?.setCustomTag({
       id: String(new Date().getTime()),
       name: nextText!
@@ -129,10 +176,10 @@ const initChat = () => {
  */
 const containerKey = ref<string>(crypto.randomUUID());
 let currentFocusIndex = 0;
-const emit = defineEmits(['update:modelValue', 'enter', 'select']);
+const emit = defineEmits(['update:modelValue', 'enter', 'select', 'esc']);
 const containerRef = ref<HTMLInputElement>();
 const optionRefs = ref<Map<string, HTMLLIElement>>(new Map());
-const inputRef = ref<typeof ElInput | null>(null);
+// const inputRef = ref<typeof ElInput | null>(null);
 const showOptions = ref(false);
 const focusIndex = ref<number>(0);
 
@@ -167,10 +214,18 @@ const optionsAll = computed<SelectOptionUse<T>[]>(() => {
 
 const optionsUse = computed<SelectOptionUse<T>[]>(() => {
   if (showOptions.value && props.modelValue?.value) {
-    const valueArr = props.modelValue.value.split(' ').filter(Boolean);
-    const prepend = valueArr.shift();
-    if (prepend?.startsWith('@')) {
-      return optionsAll.value.filter(item => item.value.includes(prepend.slice(1)) || item.label.includes(prepend.slice(1)));
+    // const valueArr = props.modelValue.value.split(' ').filter(Boolean);
+    // const prepend = valueArr.shift();
+    // if (prepend?.startsWith('@')) {
+    //   return optionsAll.value.filter(item => item.value.includes(prepend.slice(1)) || item.label.includes(prepend.slice(1)));
+    // }
+    const valueArr = props.modelValue.value.split('@');
+    const last = valueArr.pop();
+    if (last) {
+      const searchValue = last.split(' ').filter(Boolean).pop();
+      if (searchValue) {
+        return optionsAll.value.filter(item => item.value.includes(searchValue) || item.label.includes(searchValue));
+      }
     }
   }
   return optionsAll.value;
@@ -221,36 +276,14 @@ const handleInput = (value: string) => {
   }
 }
 
-const handleEnter = (e: KeyboardEvent | Event) => {
+function handleEnter(e: KeyboardEvent | Event) {
   if (!(e as KeyboardEvent).isComposing) {
-    emit('enter', props.modelValue);
+    const value = chat?.getText();
+
+    emit('enter', value);
+    // emit('enter', props.modelValue);
   }
 }
-
-// TODO: 后期扩展 tag 处理
-// const handleSpace = (e: KeyboardEvent) => {
-//   const value = (e.target as HTMLInputElement).value;
-//   requestAnimationFrame(() => {
-//     const valueArr = value.split(' ');
-//     const tags = [];
-//     // const resValueArr = valueArr.map(item => {
-//     //   if (item.startsWith('#')) {
-//     //     // tags.push(item.slice(1));
-//     //     return `<span class="tag">${item.slice(1)}</span>`
-//     //   }
-//     //   return item;
-//     // })
-//     for (const item of valueArr) {
-//       if (item.startsWith('#')) {
-//         tags.push(item.slice(1));
-//       }
-//     }
-//     emit('update:modelValue', {
-//       ...props.modelValue,
-//       tags,
-//     });
-//   })
-// }
 
 const handleFocus = () => {
   // inputRef.value?.focus();
@@ -271,6 +304,15 @@ const handleSelect = (item: SelectOptionUse<T>) => {
   // localValue.value.prepend = item.value;
   showOptions.value = false;
   emit('select', item.value, item);
+
+  const node = opNode?.getCursorNode()
+  if (node) {
+    const v = node.node.text;
+    const newTextArr = v?.split('@');
+    newTextArr?.pop();
+    node.node.text = newTextArr?.join('@') ?? '';
+    opNode?.updateNode(node.node);
+  }
   handleFocus();
 }
 
@@ -329,7 +371,9 @@ const handleKeyDown = (e: KeyboardEvent) => {
       if (showOptions.value) {
         e.preventDefault();
         e.stopPropagation();
-        showOptions.value = false;
+        if(showOptions.value){
+          showOptions.value = false;
+        }
         handleFocus();
       }
       break;
@@ -338,6 +382,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 watch(() => focusOption.value, (value) => {
   nextTick(() => {
+    if (!value) return;
     const el = optionRefs.value.get(value.value);
     el?.scrollIntoView({
       block: 'nearest',
@@ -357,6 +402,12 @@ watch([() => showOptions.value, () => optionsUse.value], ([show, options]) => {
     currentFocusIndex = 0;
   }
 })
+
+// watch(() => localValue.value.value, (value, oldValue) => {
+//   if(oldValue.at(-1) === '@' && value.length < oldValue.length && value.at(-1) !== '@'){
+//     showOptions.value = false;
+//   }
+// })
 // watch(() => props.modelValue, (value) => {
 //   if (!value?.prepend && optionsUse.value.length) {
 //     const _use = optionsUse.value.find(item => item.default) || optionsUse.value[0];
@@ -384,6 +435,9 @@ onBeforeUnmount(() => {
 defineExpose<MentionRef>({
   focus: () => {
     handleFocus();
+  },
+  getValue: () => {
+    return chat?.getText() ?? '';
   }
 })
 </script>
@@ -395,6 +449,7 @@ defineExpose<MentionRef>({
   --el-input-border-color: #dcdfe6;
   --el-input-hover-border-color: #c0c4cc;
   --el-input-active-border-color: #6366f1;
+
   .prepend-container {
     box-shadow: 1px 0 0 0 var(--el-input-border-color) inset, 0 1px 0 0 var(--el-input-border-color) inset, 0 -1px 0 0 var(--el-input-border-color) inset;
     background-color: #f5f7fa;
@@ -420,14 +475,18 @@ defineExpose<MentionRef>({
 
   .input-container {
     box-shadow: 0 0 0 1px var(--el-input-border-color) inset;
+
     &:hover {
       box-shadow: 0 0 0 1px var(--el-input-hover-border-color) inset;
     }
+
     &:focus-within {
       box-shadow: 0 0 0 1px var(--el-input-active-border-color) inset;
     }
+
     --padding-x: 10px;
-    :deep(.chat-rich-text){
+
+    :deep(.chat-rich-text) {
       height: 100%;
       padding: 0 var(--padding-x) 0;
       display: flex;
@@ -435,11 +494,13 @@ defineExpose<MentionRef>({
       font-size: inherit;
       font-style: inherit;
       color: #333;
-      .chat-grid-wrap{
+
+      .chat-grid-wrap {
         flex: 1;
       }
     }
-    :deep(.chat-placeholder-wrap){
+
+    :deep(.chat-placeholder-wrap) {
       font-size: inherit;
       font-style: inherit;
       padding: 0 var(--padding-x) 0;
@@ -448,8 +509,16 @@ defineExpose<MentionRef>({
       color: oklch(70.4% 0.04 256.788);
       align-items: center;
     }
-    :deep(.chat-view-hidden){
+
+    :deep(.chat-view-hidden) {
       display: none !important;
+    }
+
+    :deep(.at-tag[data-set-prefix="#"]) {
+      background-color: oklch(87% 0.065 274.039);
+      color: oklch(58.5% 0.233 277.117);
+      padding: 0 4px;
+      border-radius: 2px;
     }
   }
 

@@ -1,9 +1,10 @@
 {
   "name": "Json Search",
-  "description": "A Custom Search Tool for chrome extension",
-  "private": true,
-  "version": "0.0.8",
   "type": "module",
+  "version": "0.0.8",
+  "private": true,
+  "description": "A Custom Search Tool for chrome extension",
+  "license": "MIT",
   "scripts": {
     "dev": "wxt",
     "build:dev": "wxt build --mode development",
@@ -19,7 +20,7 @@
     "@element-plus/icons-vue": "^2.3.1",
     "@floating-ui/vue": "^1.1.6",
     "@wxt-dev/unocss": "^1.0.0",
-    "chatarea": "^5.8.4",
+    "chatarea": "^5.8.5",
     "element-plus": "^2.9.2",
     "interactjs": "^1.10.27",
     "jsonlee-promise": "^0.0.1",
@@ -51,6 +52,5 @@
     "commitizen": {
       "path": "node_modules/cz-git"
     }
-  },
-  "license": "MIT"
+  }
 }

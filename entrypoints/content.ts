@@ -8,8 +8,8 @@ import './global/styles/theme.css';
 import 'uno.css';
 
 const devMatches: PerBrowserOption<string[]> = [
-  'http://localhost/*',
-  // 'https://www.baidu.com/*',
+  // 'http://localhost/*',
+  'https://www.baidu.com/*',
   // 'http://www.google.com/*',
   'https://developers.weixin.qq.com/*',
 ] as const;
@@ -17,11 +17,11 @@ const prodMatches: PerBrowserOption<string[]> = ['*://*/*'] as const;
 const __DEV__ = import.meta.env.MODE === 'development' as const;
 const matches = __DEV__ ? devMatches : prodMatches;
 
-const excludeMatches: PerBrowserOption<string[]> = ['https://developers.weixin.qq.com/*'] as const;
+// const excludeMatches: PerBrowserOption<string[]> = ['https://developers.weixin.qq.com/*'] as const;
 
 export default defineContentScript({
   matches,
-  excludeMatches,
+  // excludeMatches,
   cssInjectionMode: 'ui',
   async main(ctx) {
     // 欢迎词

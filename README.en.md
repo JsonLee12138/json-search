@@ -4,6 +4,14 @@
 
 A powerful browser extension that makes your searches faster and smarter.
 
+## Changelog
+
+### v0.0.8
+
+- Fixed issue where input was affected by original webpage hotkeys
+- Added tag support feature
+- Fixed contextMenu right-click menu not working issue
+
 ## Main Features
 
 - 🔍 Custom search engines
@@ -13,6 +21,7 @@ A powerful browser extension that makes your searches faster and smarter.
 - 🔍 Mandatory search with `#tag`
 
 ## How to Use
+
 Note: After installation, you need to restart your browser or refresh the page to take effect.
 
 ### Hotkey Search
@@ -55,14 +64,4 @@ If you encounter any issues or have suggestions for new features, feel free to:
 
 - Submit an issue on GitHub
 - Email: lijunsong2@gmail.com
-
-## Changelog
-
-### v0.0.4
-- Removed search box permissions on `chrome://` pages, redirecting directly to the default search engine.
-- Added right-click search on selected text.
-- Added a custom search engine feature.
-- Multi-language support
-- Automatically close when focus is lost (enabled by default)
--	Use the tab key to select a search engine
--	Support drag-and-drop to set the position of the search box
+- [Discord](https://discord.gg/666U6JTCQY)

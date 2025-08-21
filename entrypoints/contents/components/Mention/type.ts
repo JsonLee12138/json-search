@@ -1,13 +1,14 @@
-export type DefaultSelectOption = {
+import type { ReduceNodeConfig } from 'chatarea';
+
+export interface DefaultSelectOption {
   label: string;
   value: string;
 }
 
 export class MentionValue {
-  tags: string[] = [];
   value: string = '';
   prepend: string = '';
-  constructor(defaultValue: Partial<MentionValue> = {}){
+  constructor(defaultValue: Partial<MentionValue> = {}) {
     Object.assign(this, defaultValue);
   }
 };
@@ -17,8 +18,9 @@ export type SelectOptionUse<T = DefaultSelectOption> = T & {
   value: string;
   icon?: string;
   default?: boolean;
-}
+};
 
-export type MentionRef = {
-  focus: () => void
+export interface MentionRef {
+  focus: () => void;
+  getValue: () => string;
 }

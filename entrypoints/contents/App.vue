@@ -71,7 +71,9 @@ const hasPlatform = (platform?: string) => {
   return false;
 }
 const handleSearch = () => {
-  const trimmedValue = mentionValue.value?.value || '';
+  const value = mentionRef.value?.getValue() ?? '';
+  const trimmedValue = value?.trim();
+  // const trimmedValue = mentionValue.value?.value ?? '';
   const valueArray = trimmedValue.split(' ').filter(Boolean);
   const platformInfo = hasPlatform(mentionValue.value?.prepend);
   if (platformInfo) {
@@ -149,7 +151,7 @@ watch(() => showSearch.value, (newVal) => {
             containerRef.value!.setAttribute('data-y', y.toString());
             containerRef.value!.style.transform = `translate(${x}px, ${y}px)`;
           }
-          nextTick(()=> {
+          nextTick(() => {
             containerRef.value!.style.opacity = '1';
           })
         })
@@ -173,8 +175,8 @@ watch(() => showSearch.value, (newVal) => {
   }
 })
 
-watch(()=> dialogFormVisible.value, (newVal) => {
-  if(newVal){
+watch(() => dialogFormVisible.value, (newVal) => {
+  if (newVal) {
     showSearch.value = false;
   }
 })
@@ -262,21 +264,25 @@ const handleDragEnd = (e: any) => {
   }, 100)
 }
 
+const handleEsc = () => {
+  showSearch.value = false;
+}
+
 onMounted(() => {
   initSearchPlatforms().then(res => {
     searchPlatforms.value = res;
     handleResetMentionValue();
   });
   addOpenListener();
-  window.addEventListener('keydown', (e) => {
-    if (!e.isComposing && e.code === 'Escape') {
-      showSearch.value = false;
-    }
-  })
+  // window.addEventListener('keydown', (e) => {
+  //   if (!e.isComposing && e.code === 'Escape') {
+  //     showSearch.value = false;
+  //   }
+  // })
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('keydown', (e) => { });
+  // window.removeEventListener('keydown', (e) => { });
   chrome.runtime.onMessage.removeListener(() => { });
 })
 </script>
@@ -287,7 +293,7 @@ onBeforeUnmount(() => {
       class="fixed top-[20vh] left-0 top-0 p-3 shadow bg-white flex gap-2 rounded-md opacity-0 z-[1000] json-search-content-container"
       v-if="showSearch" ref="containerRef" v-click-outside="handleBlur">
       <Mention :options="searchPlatformOptions" icon default-key="isDefault" v-model="mentionValue"
-        containerStyle="width: 320px" @enter="handleEnter" ref="mentionRef" @select="handleSelect" />
+        containerStyle="width: 320px" @enter="handleEnter" ref="mentionRef" @select="handleSelect" @esc="handleEsc" />
       <el-button type="primary" @click="handleSearch">{{ $t('search') }}</el-button>
     </div>
     <el-dialog v-model="dialogFormVisible" :title="$t('addForm.title')" width="500" :before-close="handleBeforeClose">
@@ -331,6 +337,7 @@ onBeforeUnmount(() => {
 .json-search-content-container {
   cursor: grab;
 }
+
 :deep(.el-form-item--label-top .el-form-item__label) {
   display: block;
 }
